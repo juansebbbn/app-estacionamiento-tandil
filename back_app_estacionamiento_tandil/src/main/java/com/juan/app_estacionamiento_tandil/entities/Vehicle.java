@@ -1,6 +1,6 @@
-package com.juan.parking.entities;
+package com.juan.app_estacionamiento_tandil.entities;
 
-import com.juan.parking.entities.enums.VehicleType;
+import com.juan.app_estacionamiento_tandil.entities.enums.VehicleType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,8 +27,7 @@ public class Vehicle {
     private VehicleType type;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private List<User> user;
+    private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "vehicle")
     private List<ParkingTime> parkingTimes = new ArrayList<>();
@@ -36,6 +35,6 @@ public class Vehicle {
     protected Vehicle() {}
 
     public void addUser(User user) {
-        this.user.add(user);
+        this.users.add(user);
     }
 }

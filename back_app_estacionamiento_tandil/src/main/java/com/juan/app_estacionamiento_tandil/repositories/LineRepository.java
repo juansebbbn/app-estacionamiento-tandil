@@ -1,6 +1,6 @@
-package com.juan.transport.repositories;
+package com.juan.app_estacionamiento_tandil.repositories;
 
-import com.juan.transport.entities.Line;
+import com.juan.app_estacionamiento_tandil.entities.Line;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;

@@ -1,7 +1,8 @@
-package com.juan.parking.services;
+package com.juan.app_estacionamiento_tandil.services;
 
-import com.juan.parking.entities.User;
-import com.juan.parking.repositories.UserRepository;
+import com.juan.app_estacionamiento_tandil.entities.User;
+import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
@@ -27,5 +28,11 @@ public class UserService {
             return ResponseEntity.ok(balance.getBalance());
         }
         return ResponseEntity.notFound().build();
+    }
+
+    public ResponseEntity<String> addUser(User user) {
+        userRepository.save(user);
+
+        return ResponseEntity.ok("User added successfully");
     }
 }

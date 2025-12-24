@@ -1,7 +1,7 @@
-package com.juan.parking.controllers;
+package com.juan.app_estacionamiento_tandil.controllers;
 
-import com.juan.parking.entities.User;
-import com.juan.parking.services.UserService;
+import com.juan.app_estacionamiento_tandil.entities.User;
+import com.juan.app_estacionamiento_tandil.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
@@ -14,6 +14,12 @@ public class UserController {
 
     public UserController(UserService userService) {
         this.userService = userService;
+    }
+
+    //temporary endpoint for api testing.
+    @PostMapping("/addUser")
+    public ResponseEntity<String> addUser(@RequestBody User user) {
+        return userService.addUser(user);
     }
 
     @GetMapping("/getuid/{id}")

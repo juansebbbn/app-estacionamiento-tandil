@@ -1,7 +1,7 @@
-package com.juan.transport.controllers;
+package com.juan.app_estacionamiento_tandil.controllers;
 
-import com.juan.transport.entities.Line;
-import com.juan.transport.repositories.LineRepository;
+import com.juan.app_estacionamiento_tandil.entities.Line;
+import com.juan.app_estacionamiento_tandil.repositories.LineRepository;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

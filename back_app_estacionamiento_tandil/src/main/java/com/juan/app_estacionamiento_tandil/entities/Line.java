@@ -1,4 +1,4 @@
-package com.juan.transport.entities;
+package com.juan.app_estacionamiento_tandil.entities;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

@@ -1,25 +1,22 @@
-package com.juan.parking.services;
+package com.juan.app_estacionamiento_tandil.services;
 
-import com.juan.parking.entities.ParkingTime;
-import com.juan.parking.entities.User;
-import com.juan.parking.entities.Vehicle;
-import com.juan.parking.repositories.ParkingRespository;
-import com.juan.parking.repositories.UserRepository;
-import com.juan.parking.repositories.VehicleRepository;
+import com.juan.app_estacionamiento_tandil.entities.ParkingTime;
+import com.juan.app_estacionamiento_tandil.entities.User;
+import com.juan.app_estacionamiento_tandil.entities.Vehicle;
+import com.juan.app_estacionamiento_tandil.repositories.ParkingRespository;
+import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
+import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
-import static com.juan.parking.entities.enums.ParkingState.ACTIVE;
-import static com.juan.parking.entities.enums.ParkingState.FINISHED;
+import static com.juan.app_estacionamiento_tandil.entities.enums.ParkingState.ACTIVE;
+import static com.juan.app_estacionamiento_tandil.entities.enums.ParkingState.FINISHED;
 
 @Service
 public class ParkingService {
@@ -58,7 +55,7 @@ public class ParkingService {
 
 
         //obtain user related with that vehicle and then iterate to find who is gonna pay (with id)
-        List<User> users = vehicle.getUser();
+        List<User> users = vehicle.getUsers();
 
         User payer = null;
 

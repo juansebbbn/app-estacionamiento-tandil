@@ -1,6 +1,6 @@
-package com.juan.parking.entities;
+package com.juan.app_estacionamiento_tandil.entities;
 
-import com.juan.parking.entities.enums.ParkingState;
+import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

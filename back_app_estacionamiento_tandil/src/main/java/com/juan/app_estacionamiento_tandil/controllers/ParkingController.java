@@ -1,6 +1,6 @@
-package com.juan.parking.controllers;
+package com.juan.app_estacionamiento_tandil.controllers;
 
-import com.juan.parking.services.ParkingService;
+import com.juan.app_estacionamiento_tandil.services.ParkingService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

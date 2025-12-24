@@ -1,6 +1,6 @@
-package com.juan.parking.entities;
+package com.juan.app_estacionamiento_tandil.entities;
 
-import com.juan.parking.entities.enums.PaymentState;
+import com.juan.app_estacionamiento_tandil.entities.enums.PaymentState;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;

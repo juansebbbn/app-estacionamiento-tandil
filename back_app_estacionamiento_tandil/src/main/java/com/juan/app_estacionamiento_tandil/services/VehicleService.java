@@ -1,9 +1,9 @@
-package com.juan.parking.services;
+package com.juan.app_estacionamiento_tandil.services;
 
-import com.juan.parking.entities.User;
-import com.juan.parking.entities.Vehicle;
-import com.juan.parking.repositories.UserRepository;
-import com.juan.parking.repositories.VehicleRepository;
+import com.juan.app_estacionamiento_tandil.entities.User;
+import com.juan.app_estacionamiento_tandil.entities.Vehicle;
+import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
+import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -22,32 +22,21 @@ public class VehicleService {
     }
 
     public ResponseEntity<String> addVehicle(Vehicle vehicle, Long userId) {
-        Optional<Vehicle> optional_vehicle = vehicleRepository.findById(vehicle.getId());
         Optional<User> optional_user = userRepository.findById(userId);
-        Vehicle db_vehicle = null;
-        User db_user = null;
 
-        if (optional_vehicle.isPresent() && optional_user.isPresent()) {
-            db_vehicle = optional_vehicle.get();
-            db_user = optional_user.get();
+        //continue from here. here is the error.
 
-            db_user.addVehicle(vehicle);
-            db_vehicle.addUser(db_user);
+        if (optional_user.isPresent()) {
+            User user = optional_user.get();
 
-            vehicleRepository.save(db_vehicle);
+            vehicle.addUser(user);
+            user.addVehicle(vehicle);
 
-            return new ResponseEntity<>("Vehicle added", HttpStatus.OK);
-        }else if (optional_vehicle.isEmpty() && optional_user.isPresent()) {
-            db_user = optional_user.get();
-            db_user.addVehicle(vehicle);
-            vehicle.addUser(db_user);
             vehicleRepository.save(vehicle);
-
             return new ResponseEntity<>("Vehicle added", HttpStatus.OK);
-        }else {
-            return new ResponseEntity<>("User does not exist and couldnt add the vehicle", HttpStatus.CONFLICT);
         }
 
+        return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
     }
 
     public ResponseEntity<List<Vehicle>> getVehicles(Long userId) {
