@@ -48,6 +48,8 @@ public class DataInitializer implements CommandLineRunner {
             roleRepository.save(inspectorRole);
         }
 
+        /*
+
         Optional<Role> inspector_rol = roleRepository.findByName(ERole.ROLE_INSPECTOR);
 
         if (inspector_rol.isPresent()) {
@@ -66,7 +68,7 @@ public class DataInitializer implements CommandLineRunner {
 
 
             userRepository.save(user);
-        }
+        } */
 
     }
 }
