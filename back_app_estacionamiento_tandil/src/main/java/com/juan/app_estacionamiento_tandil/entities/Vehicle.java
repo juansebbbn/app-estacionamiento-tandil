@@ -1,5 +1,6 @@
 package com.juan.app_estacionamiento_tandil.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.juan.app_estacionamiento_tandil.entities.enums.VehicleType;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -27,10 +28,16 @@ public class Vehicle {
     private VehicleType type;
 
     @ManyToMany(fetch = FetchType.LAZY)
+    @JsonBackReference
     private List<User> users = new ArrayList<>();
 
     @OneToMany(mappedBy = "vehicle")
     private List<ParkingTime> parkingTimes = new ArrayList<>();
+
+    public Vehicle(String patent, VehicleType type) {
+        this.patent = patent;
+        this.type = type;
+    }
 
     protected Vehicle() {}
 

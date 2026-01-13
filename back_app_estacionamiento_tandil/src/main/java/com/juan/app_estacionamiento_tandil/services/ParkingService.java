@@ -34,36 +34,41 @@ public class ParkingService {
     }
 
     public ResponseEntity<String> startParkingSession(String patent) {
+        System.out.println("Starting parking session: " + patent);
+
         Vehicle vehicle = vehicleRepository.findByPatent(patent);
 
         if(vehicle == null) {
+            System.out.println("Vehicle not found.");
             return new ResponseEntity<>("Vehicle does not exist.", HttpStatus.NOT_FOUND);
         }
 
         ParkingTime pt = new ParkingTime(vehicle, LocalDateTime.now(), null, ACTIVE);
         parkingRespository.save(pt);
+        System.out.println("Parking session started.");
         return new ResponseEntity<>("Session started.", HttpStatus.OK);
     }
 
     public ResponseEntity<String> finishParkingSession(String patent, Long userId) {
+        System.out.println("Finishing parking session: " + patent);
 
         Vehicle vehicle = vehicleRepository.findByPatent(patent);
 
         if(vehicle == null) {
+            System.out.println("Vehicle not found.");
             return new ResponseEntity<>("Vehicle not found.", HttpStatus.NOT_FOUND);
         }
-
 
         //obtain user related with that vehicle and then iterate to find who is gonna pay (with id)
         List<User> users = vehicle.getUsers();
 
         User payer = null;
 
-
         for (User user : users) {
             if (user.getId().equals(userId)) {
                 payer = user;
             }else{
+                System.out.println("User not found.");
                 return new ResponseEntity<>("User not found.", HttpStatus.NOT_FOUND);
             }
         }
@@ -77,6 +82,8 @@ public class ParkingService {
                 pt.setState(FINISHED);
                 pt.setEndTime(LocalDateTime.now());
 
+                System.out.println("Calculating and subtracting parking time amount...");
+
                 Duration duration = Duration.between(pt.getStartTime(), LocalDateTime.now());
                 BigDecimal minutes = BigDecimal.valueOf(duration.toMinutes());
 
@@ -84,18 +91,22 @@ public class ParkingService {
 
                 assert payer != null;
 
+
                 BigDecimal userbalance = payer.getBalance();
                 userbalance = userbalance.subtract(totalPrice);
 
             
                 if (userbalance.compareTo(infringement_limit) < 0) {
-                    System.out.println("Infringement limit reached, create Infringement");
+                    System.out.println("Infringement limit reached, create Infringement"); //logic to make an infrigment
                 }
 
                 payer.setBalance(userbalance);
 
                 userRepository.save(payer);
                 parkingRespository.save(pt);
+
+                System.out.println("Parking session finished: " + patent);
+                System.out.println("Amount subtracted: " + totalPrice);
 
                 return new ResponseEntity<>("Session ended.", HttpStatus.OK);
             }
@@ -105,6 +116,8 @@ public class ParkingService {
     }
 
     public ResponseEntity<Boolean> hasActiveSession(String patent) {
+        System.out.println("Has active session: " + patent);
+
         Vehicle vehicle = vehicleRepository.findByPatent(patent);
 
         if(vehicle == null) {

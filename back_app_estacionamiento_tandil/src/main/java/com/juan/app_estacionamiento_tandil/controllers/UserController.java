@@ -16,12 +16,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    //temporary endpoint for api testing.
-    @PostMapping("/addUser")
-    public ResponseEntity<String> addUser(@RequestBody User user) {
-        return userService.addUser(user);
-    }
-
     @GetMapping("/getuid/{id}")
     public ResponseEntity<User> getUser(@PathVariable Long id) {
         return userService.getUserById(id);

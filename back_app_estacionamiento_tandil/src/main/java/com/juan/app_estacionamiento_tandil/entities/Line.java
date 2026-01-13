@@ -29,18 +29,8 @@ public class Line {
     @Column(nullable = false)
     private String color;
 
-    @Column(nullable = false)
-    private boolean active = true;
 
     protected Line() {
-        // Constructor requerido por JPA
     }
 
-    public void deactivate() {
-        this.active = false;
-    }
-
-    public void activate() {
-        this.active = true;
-    }
 }

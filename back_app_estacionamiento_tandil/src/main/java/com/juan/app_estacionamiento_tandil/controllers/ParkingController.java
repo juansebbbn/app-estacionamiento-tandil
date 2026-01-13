@@ -23,7 +23,7 @@ public class ParkingController {
         return parkingService.finishParkingSession(patent, userid);
     }
 
-    @GetMapping("/active/{patent}")
+    @GetMapping("/admin/active/{patent}")
     public ResponseEntity<Boolean> hasActiveSession(@PathVariable String patent) {
         return parkingService.hasActiveSession(patent);
     }
