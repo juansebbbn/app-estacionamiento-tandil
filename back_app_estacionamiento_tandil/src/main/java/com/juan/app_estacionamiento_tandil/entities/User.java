@@ -47,6 +47,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user")
     private List<Payment> payments = new ArrayList<>();
 
+    @Column(name = "fcm_token")
+    private String fcmToken; // unique cellphone token
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_roles",

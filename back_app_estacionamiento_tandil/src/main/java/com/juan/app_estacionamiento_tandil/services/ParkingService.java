@@ -3,6 +3,8 @@ package com.juan.app_estacionamiento_tandil.services;
 import com.juan.app_estacionamiento_tandil.entities.ParkingTime;
 import com.juan.app_estacionamiento_tandil.entities.User;
 import com.juan.app_estacionamiento_tandil.entities.Vehicle;
+import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Coordinate;
+import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
 import com.juan.app_estacionamiento_tandil.repositories.ParkingRespository;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
@@ -14,124 +16,97 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static com.juan.app_estacionamiento_tandil.entities.enums.ParkingState.ACTIVE;
 import static com.juan.app_estacionamiento_tandil.entities.enums.ParkingState.FINISHED;
 
 @Service
 public class ParkingService {
-    private final static BigDecimal priceperminute = BigDecimal.valueOf(10.0);
-    private final static BigDecimal infringement_limit = BigDecimal.valueOf(-3000);
+    private final Long FEE = 100L;
     private final VehicleRepository vehicleRepository;
     private final ParkingRespository parkingRespository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public ParkingService(VehicleRepository vehicleRepository, ParkingRespository parkingRespository,
-                          UserRepository userRepository) {
+    public ParkingService(VehicleRepository vehicleRepository,
+                          ParkingRespository parkingRespository,
+                          UserRepository userRepository,
+                          NotificationService notificationService) {
         this.vehicleRepository = vehicleRepository;
         this.parkingRespository = parkingRespository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
-    public ResponseEntity<String> startParkingSession(String patent) {
-        System.out.println("Starting parking session: " + patent);
+    public ResponseEntity<String> startParkingSession(String patent, String username, Coordinate coordinate) {
+        Optional<User> userdb = userRepository.findByUsername(username);
 
-        Vehicle vehicle = vehicleRepository.findByPatent(patent);
+        if (userdb.isPresent()) {
+            User user = userdb.get();
 
-        if(vehicle == null) {
-            System.out.println("Vehicle not found.");
-            return new ResponseEntity<>("Vehicle does not exist.", HttpStatus.NOT_FOUND);
-        }
+            System.out.println("hay usuario " + user.getUsername());
 
-        ParkingTime pt = new ParkingTime(vehicle, LocalDateTime.now(), null, ACTIVE);
-        parkingRespository.save(pt);
-        System.out.println("Parking session started.");
-        return new ResponseEntity<>("Session started.", HttpStatus.OK);
-    }
+            Optional<Vehicle> vehdb = vehicleRepository.findByPatent(patent);
 
-    public ResponseEntity<String> finishParkingSession(String patent, Long userId) {
-        System.out.println("Finishing parking session: " + patent);
+            if(vehdb.isPresent()) {
 
-        Vehicle vehicle = vehicleRepository.findByPatent(patent);
+                Vehicle vehicle = vehdb.get();
 
-        if(vehicle == null) {
-            System.out.println("Vehicle not found.");
-            return new ResponseEntity<>("Vehicle not found.", HttpStatus.NOT_FOUND);
-        }
+                ParkingTime pk = new ParkingTime(vehicle, LocalDateTime.now(), null, ParkingState.ACTIVE, coordinate, user);
 
-        //obtain user related with that vehicle and then iterate to find who is gonna pay (with id)
-        List<User> users = vehicle.getUsers();
+                parkingRespository.save(pk);
 
-        User payer = null;
-
-        for (User user : users) {
-            if (user.getId().equals(userId)) {
-                payer = user;
-            }else{
-                System.out.println("User not found.");
-                return new ResponseEntity<>("User not found.", HttpStatus.NOT_FOUND);
+                return ResponseEntity.status(HttpStatus.CREATED).body("Parking session started");
             }
         }
 
-        //look for all parking times session of the vehicle
-        List<ParkingTime> parkingTimes = vehicle.getParkingTimes();
 
 
-        for(ParkingTime pt : parkingTimes) {
-            if (pt.getState() == ACTIVE) {  //if one of the is active we must desactivate it
-                pt.setState(FINISHED);
-                pt.setEndTime(LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not initiate parking session");
+    }
 
-                System.out.println("Calculating and subtracting parking time amount...");
+    public ResponseEntity<String> finishParkingSession(Long parkingId, String username) {
+        Optional<ParkingTime> ptdb = parkingRespository.findById(parkingId);
 
-                Duration duration = Duration.between(pt.getStartTime(), LocalDateTime.now());
-                BigDecimal minutes = BigDecimal.valueOf(duration.toMinutes());
+        if(ptdb.isPresent()) {
+            ParkingTime pk = ptdb.get();
 
-                BigDecimal totalPrice = priceperminute.multiply(minutes);
+            Optional<User> userdb = userRepository.findByUsername(username);
 
-                assert payer != null;
+            if(userdb.isPresent()) {
+                User user = userdb.get();
 
+                pk.setState(FINISHED);
 
-                BigDecimal userbalance = payer.getBalance();
-                userbalance = userbalance.subtract(totalPrice);
+                pk.setEndTime(LocalDateTime.now());
 
-            
-                if (userbalance.compareTo(infringement_limit) < 0) {
-                    System.out.println("Infringement limit reached, create Infringement"); //logic to make an infrigment
-                }
+                Duration duration = Duration.between(pk.getStartTime(), pk.getEndTime());
 
-                payer.setBalance(userbalance);
+                Long minutes = duration.toMinutes();
 
-                userRepository.save(payer);
-                parkingRespository.save(pt);
+                long totalCharge = minutes * FEE;
 
-                System.out.println("Parking session finished: " + patent);
-                System.out.println("Amount subtracted: " + totalPrice);
+                BigDecimal newBalance = user.getBalance().subtract(BigDecimal.valueOf(totalCharge));
 
-                return new ResponseEntity<>("Session ended.", HttpStatus.OK);
+                user.setBalance(newBalance);
+
+                userRepository.save(user);
+                parkingRespository.save(pk);
+
+                return ResponseEntity.status(HttpStatus.CREATED).body("Parking session finished");
             }
         }
 
-        return new ResponseEntity<>("Could find or end the sesion.", HttpStatus.NOT_FOUND);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not finish parking session");
     }
 
     public ResponseEntity<Boolean> hasActiveSession(String patent) {
-        System.out.println("Has active session: " + patent);
+        Optional<ParkingTime> pkdb = parkingRespository.findByPatent(patent);
+        return pkdb.isPresent() ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
+    }
 
-        Vehicle vehicle = vehicleRepository.findByPatent(patent);
-
-        if(vehicle == null) {
-            return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
-        }
-
-        List<ParkingTime> ptm = vehicle.getParkingTimes();
-
-        for(ParkingTime pt : ptm) {
-            if(pt.getState() == ACTIVE) {
-                return new ResponseEntity<>(true, HttpStatus.OK);
-            }
-        }
-
-        return new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+    public List<ParkingTime> getAllSessiones() {
+        return parkingRespository.findAll();
     }
 }
