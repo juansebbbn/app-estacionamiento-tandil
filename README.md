@@ -22,8 +22,10 @@ features that will be added:
 2. global expection handler for not use java excep.
 
 technologies: 
-backend: java spring boot
-frontend: not define
+backend: java spring boot.
+frontend: react native.
+
+BACKEND OR SERVER PART:
 
 endpoints:
 
@@ -44,6 +46,7 @@ DELETE /api/vehicles/{vehicleId} //working
 parking session:
 POST   /api/parking/start/{patent} //working
 POST   /api/parking/finish/{patent} //working
+
 GET    /api/parking/active/{patent}  //working. this endpoint could only be access by inspectors.
 
 parking zone:
@@ -65,3 +68,35 @@ psw: 123
 TEST USER WITH INSPECTOR ROLE:
 username: INSPECTOR
 psw: 123
+
+FRONT OR CLIENT PART:
+
+Project Structure:
+The project follows a modular architecture to ensure scalability and maintainability. Below is a description of the /src directory:
+
+api/: Contains Axios configurations, base URL definitions, and all HTTP request services to communicate with the Spring Boot backend.
+
+components/: Reusable UI atoms and molecules (e.g., CustomButton, InputFields, ParkingCard) that are used across multiple screens.
+
+screens/: High-level containers for each application view (e.g., LoginScreen, MapScreen, ProfileScreen).
+
+navigation/: Logic for app routing, including AuthStack (login/register) and MainStack (protected routes requiring a JWT).
+
+context/: Global state management (React Context API) to store the User's session, JWT token, and authentication status.
+
+hooks/: Custom React hooks for reusable logic, such as useLocation for GPS tracking or useAuth for session management.
+
+constants/: Global static values like the Tandil city boundary coordinates, color palettes, and API endpoints.
+
+utils/: Helper functions for non-business logic, such as date formatting, currency conversion (ARS), or input validation.
+
+types/: TypeScript interfaces and types to ensure data consistency between the backend JSON responses and the frontend.
+
+<------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------>
+
+things im learning in the process:
+1) use dtos when we are passing system limit front -> back. do not expose the entity for safety. we dont want user knows what things we save at db.
+2) do not use id from client to identify users. users can adulterate data and our system will make decisions that affects others users.
+3) id had to refactor the way a session was created and ended, in past i asked to client for his id to recognise him and make the payment. but with this data flow 
+i was expose to a client that send me an id from other person. 
+

@@ -29,18 +29,13 @@ public class ParkingZone {
         boolean isInside = false;
 
 
-        System.out.println("user lat: " + userLat);
-
         for (int i = 0, j = nvert - 1; i < nvert; j = i++) {
 
             if (((vertices.get(i).getLatitude() > userLat) != (vertices.get(j).getLatitude() > userLat))) {
 
-                System.out.println("entre " + vertices.get(i).getLatitude() + " " + vertices.get(j).getLatitude());
-
                 double intersectLng = (vertices.get(j).getLongitude() - vertices.get(i).getLongitude()) * (userLat - vertices.get(i).getLatitude()) /
                         (vertices.get(j).getLatitude() - vertices.get(i).getLatitude()) +
                         vertices.get(i).getLongitude();
-
 
                 if (userLng < intersectLng) {
                     isInside = !isInside;
