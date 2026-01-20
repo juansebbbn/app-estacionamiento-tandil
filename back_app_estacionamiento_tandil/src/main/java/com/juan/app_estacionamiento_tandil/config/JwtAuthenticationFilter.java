@@ -38,37 +38,57 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String username;
 
-        System.out.println("--- Request interceptada ---");
+        System.out.println("\n--- [DEBUG] JWT Filter Start ---");
         System.out.println("Path: " + request.getServletPath());
-        System.out.println("Auth Header: " + authHeader);
+        System.out.println("Auth Header received: " + authHeader);
 
-        // 1. Check if the header contains a Bearer token
+        // 1. Check if the header exists and has the correct format
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            System.out.println("Result: No Authorization header or doesn't start with 'Bearer '. Skipping filter.");
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Extract the token
-        jwt = authHeader.substring(7);
-        username = jwtService.extractUsername(jwt);
+        try {
+            // 2. Extract the token and handle potential JS issues
+            jwt = authHeader.substring(7);
 
-        // 3. If user is found and not already authenticated in this request
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
-
-            // 4. Validate token against DB user
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                // 5. Authenticate user in the security context
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+            // Check for common frontend bugs (sending "undefined" or "null" as string)
+            if (jwt.equalsIgnoreCase("undefined") || jwt.equalsIgnoreCase("null") || jwt.isEmpty()) {
+                System.err.println("ERROR: Received invalid string '" + jwt + "' instead of a real JWT.");
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            username = jwtService.extractUsername(jwt);
+            System.out.println("Token extracted. Subject (Username): " + username);
+
+            // 3. Authenticate if user is found and no session exists yet
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+
+                // 4. Validate token against Database
+                if (jwtService.isTokenValid(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+                    // Final authentication step
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    System.out.println("SUCCESS: User '" + username + "' authenticated.");
+                } else {
+                    System.out.println("WARNING: Token is not valid for user '" + username + "'.");
+                }
+            }
+        } catch (Exception e) {
+            // Catch MalformedJwtException, ExpiredJwtException, etc.
+            System.err.println("CRITICAL ERROR PROCESSING JWT: " + e.getMessage());
         }
+
+        System.out.println("--- [DEBUG] JWT Filter End ---\n");
         filterChain.doFilter(request, response);
     }
 }

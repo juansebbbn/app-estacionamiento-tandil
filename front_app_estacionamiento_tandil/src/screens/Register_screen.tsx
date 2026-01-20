@@ -6,16 +6,22 @@ import {
   TextInput,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import { CustomButton } from "../components/Custom_button";
+import { useAuth } from "../context/AuthContext"; 
 
 export const RegisterScreen = ({ navigation }: any) => {
   const [dni, setDni] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleRegister = () => {
+  const { signUp } = useAuth();
+
+  const handleRegister = async () => {
+ 
     if (!dni || !username || !password || !confirmPassword) {
       Alert.alert("Error", "Todos los campos son obligatorios");
       return;
@@ -26,10 +32,35 @@ export const RegisterScreen = ({ navigation }: any) => {
       return;
     }
 
-    console.log("Registrando usuario:", { dni, username });
-    // Aquí irá la llamada POST a tu endpoint de registro
-    Alert.alert("Éxito", "Usuario registrado (Simulado)");
-    navigation.navigate("Login");
+    if (username.length < 8) {
+      Alert.alert("Error", "El usuario debe tener al menos 8 caracteres");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Error", "La contraseña debe tener al menos 6 caracteres");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await signUp({
+        username,
+        password,
+        dni,
+      });
+
+      Alert.alert("¡Éxito!", "Tu cuenta ha sido creada correctamente");
+    } catch (error: any) {
+      Alert.alert(
+        "Error de registro",
+        "No se pudo completar el registro. Es posible que el DNI o el usuario ya estén en uso."
+      );
+      console.error("Error en registro:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -49,6 +80,7 @@ export const RegisterScreen = ({ navigation }: any) => {
         <TextInput
           style={styles.input}
           placeholder="Nombre de usuario"
+          autoCapitalize="none"
           value={username}
           onChangeText={setUsername}
         />
@@ -69,7 +101,11 @@ export const RegisterScreen = ({ navigation }: any) => {
           onChangeText={setConfirmPassword}
         />
 
-        <CustomButton title="Registrarse" onPress={handleRegister} />
+        {isSubmitting ? (
+          <ActivityIndicator size="large" color="#0055b3" style={{ marginVertical: 20 }} />
+        ) : (
+          <CustomButton title="Registrarse" onPress={handleRegister} />
+        )}
 
         <Text style={styles.link} onPress={() => navigation.goBack()}>
           ¿Ya tienes cuenta? Inicia sesión

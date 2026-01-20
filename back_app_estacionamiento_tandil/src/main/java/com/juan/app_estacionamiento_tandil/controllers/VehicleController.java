@@ -5,6 +5,8 @@ import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Vehicl
 import com.juan.app_estacionamiento_tandil.services.VehicleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,37 +22,29 @@ public class VehicleController {
         this.vehicleService = vehicleService;
     }
 
-    @PostMapping("/add/{userId}")
+    @PostMapping("/add")
     public ResponseEntity<String> addVehicle(
-            @PathVariable Long userId,
-            @RequestBody Vehicle_data_transfer vehicle) {
-        if (userId == null) {
-            System.out.println("Didnt proportionate a user id");
-        }
+            @RequestBody Vehicle_data_transfer vehicle,
+            @AuthenticationPrincipal UserDetails currentUser) {
 
-        return vehicleService.addVehicle(vehicle, userId);
+        String username = currentUser.getUsername();
+        return vehicleService.addVehicle(vehicle, username);
     }
 
-    @GetMapping("/get all/{userId}")
-    public ResponseEntity<List<Vehicle>> getVehicles(@PathVariable Long userId,
-                                                     @RequestHeader Map<String, String> headers) {
-        if (userId == null) {
-            System.out.println("Didnt proportionate a user id");
-        }
-
-        return vehicleService.getVehicles(userId);
+    @GetMapping("/get_all")
+    public ResponseEntity<List<Vehicle>> getVehicles(@AuthenticationPrincipal UserDetails currentUser) {
+        String username = currentUser.getUsername();
+        return vehicleService.getVehicles(username);
     }
 
-    @DeleteMapping("/delete/{vehicleId}/{userId}")
-    public ResponseEntity<Void> deleteVehicle(@PathVariable Long vehicleId, @PathVariable Long userId) {
-        if (vehicleId == null) {
+    @DeleteMapping("/delete/{patent}")
+    public ResponseEntity<Void> deleteVehicle(@PathVariable String patent, @AuthenticationPrincipal UserDetails currentUser) {
+        if (patent == null) {
             System.out.println("Didnt proportionate a vehicle id");
         }
 
-        if (userId == null) {
-            System.out.println("Didnt proportionate a user id");
-        }
+        String username = currentUser.getUsername();
 
-        return vehicleService.deleteVehicle(vehicleId, userId);
+        return vehicleService.deleteVehicle(patent, username);
     }
 }

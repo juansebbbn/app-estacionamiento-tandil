@@ -11,17 +11,15 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
     }
 
-    public ResponseEntity<User> getUserById(Long id) {
-        System.out.println("Fetching user by id: " + id);
+    public ResponseEntity<User> getUserByUsername(String username) {
+        System.out.println("Fetching user by username: " + username);
 
-        Optional<User> user = userRepository.findById(id);
+        Optional<User> user = userRepository.findByUsername(username);
 
         return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -4,6 +4,7 @@ import com.juan.app_estacionamiento_tandil.entities.ParkingTime;
 import com.juan.app_estacionamiento_tandil.entities.User;
 import com.juan.app_estacionamiento_tandil.entities.Vehicle;
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Coordinate;
+import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Parking_time_data_transfer;
 import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
 import com.juan.app_estacionamiento_tandil.repositories.ParkingRespository;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
@@ -39,8 +40,10 @@ public class ParkingService {
         this.notificationService = notificationService;
     }
 
-    public ResponseEntity<String> startParkingSession(String patent, String username, Coordinate coordinate) {
+    public ResponseEntity<Parking_time_data_transfer> startParkingSession(String patent, String username, Coordinate coordinate) {
         Optional<User> userdb = userRepository.findByUsername(username);
+
+        System.out.println("service startParkingSession for username: " + username);
 
         if (userdb.isPresent()) {
             User user = userdb.get();
@@ -57,13 +60,14 @@ public class ParkingService {
 
                 parkingRespository.save(pk);
 
-                return ResponseEntity.status(HttpStatus.CREATED).body("Parking session started");
+                Parking_time_data_transfer ptdt = new Parking_time_data_transfer(pk.getId(), pk.getStartTime(), pk.getEndTime(), pk.getCoordinate());
+
+                return ResponseEntity.status(HttpStatus.CREATED).body(ptdt);
             }
         }
 
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not initiate parking session");
     }
 
     public ResponseEntity<String> finishParkingSession(Long parkingId, String username) {

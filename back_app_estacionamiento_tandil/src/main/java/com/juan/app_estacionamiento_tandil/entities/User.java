@@ -1,5 +1,6 @@
 package com.juan.app_estacionamiento_tandil.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -40,8 +41,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private BigDecimal balance = BigDecimal.ZERO;
 
-    @ManyToMany (mappedBy = "users")
-    @JsonManagedReference
+    @ManyToMany(mappedBy = "users")
+    @JsonIgnoreProperties("users") // Cuando cargues vehículos, NO cargues sus listas de usuarios
     private List<Vehicle> vehicles = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")

@@ -92,6 +92,29 @@ utils/: Helper functions for non-business logic, such as date formatting, curren
 
 types/: TypeScript interfaces and types to ensure data consistency between the backend JSON responses and the frontend.
 
+api calls by frontend screens:
+
+start parking:
+   -getallvehicles
+   -is_at_parking_zone
+   -getbalance
+   -getfee
+   -startsession
+   -finishsession
+   -deletevehicle
+   -getuserbyusername
+
+map:
+   -is_at_parking_zone
+
+my cars:
+   -getallvehicles
+   -deletevehicle
+   -addvehicle
+
+account:
+   -getuserbyusername
+
 <------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------>
 
 things im learning in the process:
@@ -99,4 +122,12 @@ things im learning in the process:
 2) do not use id from client to identify users. users can adulterate data and our system will make decisions that affects others users.
 3) id had to refactor the way a session was created and ended, in past i asked to client for his id to recognise him and make the payment. but with this data flow 
 i was expose to a client that send me an id from other person. 
+4) hardcoding (client side) the parking rate is risky because it forces users to update their mobile application every time prices change. If a user doesn't update, they will see an outdated price while your Spring Boot backend charges the new one, leading to confusion and complaints. Additionally, app store approvals for updates can be slow, preventing you from making immediate price adjustments. Instead, you should fetch these business rules from an API endpoint during the app's startup or when a session begins. This ensures everyone sees consistent, real-time data without needing constant deployments. You can still hardcode permanent values like time measurement units or internal configuration keys, but any value tied to money or changing business logic belongs in the database.
+5) make a good data model in the beginning, if not, in future you will have a lot of problems, by refactor.
+
+thing that i have to remember:
+1) make the payment logic. when a user pays the parking session i must create an object paymente and add it to user history paymente. thanks to this user could visualize payment data.
+2) change the way i identify the user. do not user id, instead user username. // finished
+3) when user upload a car it can not be use it by other user because the post duplicates the key. //finished
+
 

@@ -25,7 +25,7 @@ export const ParkingMenu = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.card}
-          onPress={() => console.log("Mapa")}
+          onPress={() => navigation.navigate("Mapa")}
         >
           <MaterialIcons name="map" size={32} color="black" />
           <Text style={styles.cardTitle}>Ver mapa</Text>
@@ -41,7 +41,7 @@ export const ParkingMenu = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.card}
-          onPress={() => console.log("Cuenta")}
+          onPress={() => navigation.navigate("Cuenta")}
         >
           <MaterialIcons name="person" size={42} color="black" />{" "}
           <Text style={styles.cardTitle}>Cuenta</Text>

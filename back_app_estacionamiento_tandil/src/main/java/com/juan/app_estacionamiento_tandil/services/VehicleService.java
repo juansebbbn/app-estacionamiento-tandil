@@ -22,19 +22,37 @@ public class VehicleService {
         this.userRepository = userRepository;
     }
 
-    public ResponseEntity<String> addVehicle(Vehicle_data_transfer vehicle_dto, Long userId) {
+    public ResponseEntity<String> addVehicle(Vehicle_data_transfer vehicle_dto, String username) {
 
-        Optional<User> optional_user = userRepository.findById(userId);
-
-        Vehicle vehicledb = new Vehicle(vehicle_dto.getPatent(), vehicle_dto.getType());
-
-        System.out.println("Adding vehicle: " + vehicledb);
+        Optional<User> optional_user = userRepository.findByUsername(username);
 
         if (optional_user.isPresent()) {
+
             User user = optional_user.get();
+
+            Optional<Vehicle> optional_vehicle = vehicleRepository.findByPatent(vehicle_dto.getPatent());
+
+            if (optional_vehicle.isPresent()) {
+                Vehicle vehicle = optional_vehicle.get();
+
+                if(!user.getVehicles().contains(vehicle)) {
+                    user.addVehicle(vehicle);
+                    vehicle.addUser(user);
+                    vehicleRepository.save(vehicle);
+                    userRepository.save(user);
+                    return new ResponseEntity<>("Vehicle added", HttpStatus.OK);
+                }
+
+                System.out.println("Vehicle already added");
+
+            }
+
+            Vehicle vehicledb = new Vehicle(vehicle_dto.getPatent(), vehicle_dto.getType());
 
             vehicledb.addUser(user);
             user.addVehicle(vehicledb);
+
+            System.out.println("Adding vehicle: " + vehicledb);
 
             vehicleRepository.save(vehicledb);
 
@@ -43,15 +61,15 @@ public class VehicleService {
             return new ResponseEntity<>("Vehicle added", HttpStatus.OK);
         }
 
-        System.out.println("Could not add vehicle, user not found: " + userId);
+        System.out.println("Could not add vehicle, user not found: " + username);
 
         return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<List<Vehicle>> getVehicles(Long userId) {
-        System.out.println("Fetching vehicles by Userid: " + userId);
+    public ResponseEntity<List<Vehicle>> getVehicles(String username) {
+        System.out.println("Fetching vehicles by username: " + username);
 
-        Optional<User> user = userRepository.findById(userId);
+        Optional<User> user = userRepository.findByUsername(username);
 
         if (user.isPresent()) {
             List<Vehicle> vehicles = user.get().getVehicles();
@@ -61,40 +79,44 @@ public class VehicleService {
             return new ResponseEntity<>(vehicles, HttpStatus.OK);
         }
 
-        System.out.println("Could not find vehicles by Userid: " + userId);
+        System.out.println("Could not find vehicles by Userid: " + username);
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-    public ResponseEntity<Void> deleteVehicle(Long vehicleId, Long userId) {
-        System.out.println("Deleting vehicle: " + vehicleId);
+    public ResponseEntity<Void> deleteVehicle(String patent, String username) {
+        System.out.println("Deleting vehicle: " + patent);
         boolean exists = false;
 
-        Optional<User> userDb = userRepository.findById(userId);
+        Optional<User> userDb = userRepository.findByUsername(username);
         if (userDb.isPresent()) {
             User user = userDb.get();
 
             for(Vehicle vehicle : user.getVehicles()) {
-                System.out.println("CARID: " + vehicle.getId());
-                if (vehicle.getId().equals(vehicleId)) {
+                if (vehicle.getPatent().equals(patent)) {
                     exists = true;
                     break;
                 }
             }
 
-            Optional<Vehicle> vehicleDb = vehicleRepository.findById(vehicleId);
+            Optional<Vehicle> vehicleDb = vehicleRepository.findByPatent(patent);
 
             if (vehicleDb.isPresent() && exists) {
-                user.getVehicles().remove(vehicleDb.get());
-                vehicleRepository.deleteById(vehicleId);
+                Vehicle vehicle = vehicleDb.get();
+
+                vehicle.getUsers().remove(user);
+                user.getVehicles().remove(vehicle);
+
+                vehicleRepository.save(vehicle);
+                userRepository.save(user);
             }
 
-            System.out.println("Vehicle deleted: " + vehicleId);
+            System.out.println("Vehicle deleted: " + patent);
 
             return new ResponseEntity<>(HttpStatus.OK);
         }
 
-        System.out.println("Could not find vehicle, user not found: " + userId);
+        System.out.println("Could not find vehicle, user not found: " + username);
 
         return new ResponseEntity<>(HttpStatus.CONFLICT);
     }

@@ -3,6 +3,7 @@ package com.juan.app_estacionamiento_tandil.controllers;
 import com.juan.app_estacionamiento_tandil.entities.ParkingTime;
 import com.juan.app_estacionamiento_tandil.entities.User;
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Coordinate;
+import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Parking_time_data_transfer;
 import com.juan.app_estacionamiento_tandil.services.ParkingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,11 +24,13 @@ public class ParkingController {
     }
 
     @PostMapping("/start/{patent}")
-    public ResponseEntity<String> startParkingSession(@PathVariable String patent,
-                                                      @RequestBody Coordinate coordinate,
-                                                      @AuthenticationPrincipal UserDetails currentUser) {
+    public ResponseEntity<Parking_time_data_transfer> startParkingSession(@PathVariable String patent,
+                                                                          @RequestBody Coordinate coordinate,
+                                                                          @AuthenticationPrincipal UserDetails currentUser) {
+
 
         String username = currentUser.getUsername();
+        System.out.println("controller startParkingSession for username: " + username);
         return parkingService.startParkingSession(patent, username, coordinate);
     }
 

@@ -1,5 +1,7 @@
     package com.juan.app_estacionamiento_tandil.entities;
 
+    import com.fasterxml.jackson.annotation.JsonIgnore;
+    import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
     import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Coordinate;
     import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
     import jakarta.persistence.*;
@@ -20,10 +22,12 @@
 
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "vehicle_id", nullable = false)
+        @JsonIgnore
         private Vehicle vehicle;
 
         @ManyToOne
         @JoinColumn(name = "user_id")
+        @JsonIgnore
         private User user;
 
         @Column(nullable = false)

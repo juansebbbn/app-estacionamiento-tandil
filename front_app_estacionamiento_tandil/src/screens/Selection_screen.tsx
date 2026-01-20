@@ -21,7 +21,7 @@ export const SelectionScreen = ({ navigation }: any) => {
           style={[styles.card, styles.blue]} 
           onPress={() => console.log("Ir a Transporte")}
         >
-          <Text style={styles.cardTitle}>Transporte</Text>
+          <Text style={styles.cardTitle}>Transporte (Pronto) </Text>
         </TouchableOpacity>
 
       </View>

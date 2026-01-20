@@ -30,7 +30,10 @@ public class AuthController {
     // =========================
     @PostMapping("/login")
     public Token_data_transfer login(@RequestBody Login_data_transfer dto) {
-        return authService.login(dto);
+        Token_data_transfer token = authService.login(dto);
+        System.out.println("entre");
+        System.out.println(token.toString());
+        return token;
     }
 
     //=========================

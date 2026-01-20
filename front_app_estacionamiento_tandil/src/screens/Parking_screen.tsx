@@ -1,209 +1,313 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { FontAwesome5, MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import {
+  FontAwesome5,
+  MaterialCommunityIcons,
+  Ionicons,
+} from "@expo/vector-icons";
+import { userService, vehicleService, parkingService } from "../api/Api_calls";
+import { useAuth } from "../context/AuthContext";
+import * as Location from "expo-location";
 
 export const ParkingScreen = ({ navigation }: any) => {
-  const insets = useSafeAreaInsets();
-  
-  // Estados para la selección
-  const [selectedCar, setSelectedCar] = useState('AF 123 BK');
-  const [hours, setHours] = useState(1);
+  const [vehicles, setVehicles] = useState<any[]>([]);
+  const [userData, setUserData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [zone, setZone] = useState<boolean>(false);
+  const [activeSession, setParkingSession] = useState<boolean>(false);
+  const [patent, setPatent] = useState<string>("");
+  const [time, setTime] = useState<number>(1);
+  const [sessionId, setSesionId] = useState<number>(1);
 
-  const handleConfirm = () => {
-    // Aquí dispararás el POST a Spring Boot en el futuro
-    Alert.alert(
-      "Estacionamiento Iniciado",
-      `Vehículo: ${selectedCar}\nTiempo: ${hours}hs\nZona: Microcentro`,
-      [{ text: "OK", onPress: () => navigation.navigate('ParkingMenu') }]
-    );
+  const fetchUserData = async () => {
+    try {
+      const data = await userService.getByUsername();
+      setUserData(data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
+  const fetchUserZone = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      let location = await Location.getCurrentPositionAsync({});
+      const data = await parkingService.checkUserLocation(
+        location.coords.latitude,
+        location.coords.longitude,
+      );
+      setZone(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchVehiclesData = async () => {
+    try {
+      const data = await vehicleService.getAllVehicles();
+      setVehicles(data);
+      if (data.length > 0) setPatent(data[0].patent);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const startParkingSession = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") return;
+      let location = await Location.getCurrentPositionAsync({});
+      const response = await parkingService.startSession(
+        patent,
+        location.coords,
+      );
+      setSesionId(response.parkingId);
+      setParkingSession(true);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const finishParkingSession = async () => {
+    try {
+      await parkingService.finishSession(sessionId);
+      setSesionId(0);
+      setParkingSession(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    console.log(patent);
+    console.log(zone);
+    fetchVehiclesData();
+    fetchUserZone();
+    fetchUserData();
+    console.log("session id " + sessionId);
+  }, []);
+
+  if (loading)
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color="#EAB308" />
+      </View>
+    );
+
   return (
-    <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
-      <ScrollView contentContainerStyle={styles.content}>
-        
-        <Text style={styles.title}>Iniciar Estacionamiento</Text>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ paddingBottom: 40 }}
+    >
+      <Text style={styles.mainTitle}>Iniciar Estacionamiento</Text>
 
-        {/* Sección: Selección de Auto */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Vehículo seleccionado:</Text>
-          <TouchableOpacity 
-            style={styles.selector} 
+      <View style={styles.section}>
+        <Text style={styles.label}>Vehículo seleccionado:</Text>
+        {vehicles.map((item) => (
+          <TouchableOpacity
+            key={item.patent}
+            style={[
+              styles.whiteCard,
+              patent === item.patent && styles.selectedCard,
+            ]}
+            onPress={() => setPatent(item.patent)}
           >
-            <FontAwesome5 name="car" size={20} color="#0055b3" />
-            <Text style={styles.selectorText}>{selectedCar}</Text>
-            <Ionicons name="chevron-forward" size={20} color="#888" />
+            <View style={styles.row}>
+              <FontAwesome5 name="car" size={18} color="#0056b3" />
+              <Text style={styles.cardTextBold}>{item.patent}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#ccc" />
           </TouchableOpacity>
-        </View>
+        ))}
+      </View>
 
-        {/* Sección: Zona Detectada */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Zona detectada:</Text>
-          <View style={styles.infoBox}>
-            <MaterialCommunityIcons name="map-marker-radius" size={24} color="#e74c3c" />
-            <View>
-              <Text style={styles.infoTitle}>Zona Céntrica - Tandil</Text>
-              <Text style={styles.infoSubtitle}>Dentro de las 4 avenidas</Text>
+      <View style={styles.section}>
+        <Text style={styles.label}>Zona detectada:</Text>
+        <View style={styles.zoneCard}>
+          <View style={styles.redIndicator} />
+          <View style={styles.row}>
+            <MaterialCommunityIcons
+              name="map-marker"
+              size={24}
+              color="#E11D48"
+            />
+            <View style={styles.textColumn}>
+              <Text style={styles.cardTextBold}>
+                {zone ? "Zona Céntrica - Tandil" : "Fuera de Radio"}
+              </Text>
+              <Text style={styles.cardSubtext}>
+                {zone
+                  ? "Dentro de las 4 avenidas"
+                  : "Estacionamiento no medido"}
+              </Text>
             </View>
           </View>
         </View>
+      </View>
 
-        {/* Sección: Contador de Tiempo */}
-        <View style={styles.section}>
-          <Text style={styles.label}>¿Cuánto tiempo vas a estar? (Horas)</Text>
-          <View style={styles.counterContainer}>
-            <TouchableOpacity 
-                style={styles.counterBtn} 
-                onPress={() => setHours(Math.max(1, hours - 1))}
-            >
-              <Ionicons name="remove" size={24} color="black" />
-            </TouchableOpacity>
-            
-            <Text style={styles.counterText}>{hours} h</Text>
-            
-            <TouchableOpacity 
-                style={styles.counterBtn} 
-                onPress={() => setHours(hours + 1)}
-            >
-              <Ionicons name="add" size={24} color="black" />
-            </TouchableOpacity>
-          </View>
+      <View style={styles.section}>
+        <Text style={styles.label}>¿Cuánto tiempo vas a estar? (Horas)</Text>
+        <View style={styles.timeSelector}>
+          <TouchableOpacity
+            style={styles.roundBtn}
+            onPress={() => setTime(Math.max(1, time - 1))}
+          >
+            <Text style={styles.roundBtnText}>-</Text>
+          </TouchableOpacity>
+          <Text style={styles.timeValue}>{time} h</Text>
+          <TouchableOpacity
+            style={styles.roundBtn}
+            onPress={() => setTime(time + 1)}
+          >
+            <Text style={styles.roundBtnText}>+</Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        {/* Resumen de Pago */}
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Costo estimado:</Text>
-          <Text style={styles.price}>${hours * 150}.00</Text> 
-          <Text style={styles.balanceInfo}>Saldo disponible: $2.450,00</Text>
-        </View>
+      <View style={styles.costPanel}>
+        <Text style={styles.costLabel}>Costo estimado:</Text>
+        <Text style={styles.costValue}>${(time * 150).toFixed(2)}</Text>
+        <Text style={styles.balanceLabel}>
+          Saldo disponible:{" "}
+          <Text style={styles.yellowText}>${userData?.balance || "0.00"}</Text>
+        </Text>
+      </View>
 
-        {/* Botón de Confirmación */}
-        <TouchableOpacity 
-          style={styles.mainButton}
-          onPress={handleConfirm}
-        >
-          <Text style={styles.mainButtonText}>Confirmar Estacionamiento</Text>
-        </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.mainBtn}
+        onPress={activeSession ? finishParkingSession : startParkingSession}
+      >
+        <Text style={styles.mainBtnText}>
+          {activeSession
+            ? "Finalizar estacionamiento"
+            : "Iniciar estacionamiento"}
+        </Text>
+      </TouchableOpacity>
 
-      </ScrollView> 
-    </View>
+      <View>
+        {activeSession ? (
+          <Text style={styles.successText}>
+            Sesión iniciada para vehículo con patente: {patent}
+          </Text>
+        ) : (
+          <Text style={styles.infoText}>
+            No hay ninguna sesión activa en este momento.
+          </Text>
+        )}
+      </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-    backgroundColor: '#fbf9f0' 
-  },
-  content: { 
+  container: {
+    flex: 1,
+    backgroundColor: "#FDFBF7",
     padding: 25,
-    paddingBottom: 40 
+    marginBottom: 50,
   },
-  title: { 
-    fontSize: 20, 
-    fontWeight: 'bold', 
-    marginBottom: 30, 
-    color: '#333', 
-    textAlign: 'center' 
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  mainTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginBottom: 15,
+    marginTop: 20,
   },
-  section: { 
-    marginBottom: 25 
-  },
-  label: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: '#555', 
-    marginBottom: 10 
-  },
-  selector: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 15,
+  section: { marginBottom: 25 },
+  label: { fontSize: 15, fontWeight: "600", color: "#444", marginBottom: 12 },
+  whiteCard: {
+    backgroundColor: "#FFF",
     borderRadius: 12,
-    alignItems: 'center',
+    padding: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    margin: 2,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
   },
-  selectorText: { 
-    flex: 1, 
-    marginLeft: 15, 
-    fontSize: 16, 
-    fontWeight: 'bold' 
-  },
-  infoBox: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 15,
+  selectedCard: { borderColor: "#0056b3", backgroundColor: "#F0F7FF" },
+  zoneCard: {
+    backgroundColor: "#FFF",
     borderRadius: 12,
-    alignItems: 'center',
-    gap: 15,
-    borderLeftWidth: 5,
-    borderLeftColor: '#e74c3c'
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden", 
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    elevation: 2,
   },
-  infoTitle: { 
-    fontWeight: 'bold', 
-    fontSize: 16 
+  redIndicator: { width: 5, height: "100%", backgroundColor: "#E11D48" },
+  row: { flexDirection: "row", alignItems: "center", padding: 15 },
+  textColumn: { marginLeft: 12 },
+  cardTextBold: {
+    fontSize: 13,
+    fontWeight: "bold",
+    color: "#000",
+    marginLeft: 8,
   },
-  infoSubtitle: { 
-    color: '#666', 
-    fontSize: 14 
+  cardSubtext: { fontSize: 14, color: "#6B7280" },
+  timeSelector: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 10,
   },
-  counterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 30,
-    marginTop: 10
-  },
-  counterBtn: {
-    backgroundColor: '#FEDA05',
+  timeValue: { fontSize: 19, fontWeight: "bold", marginHorizontal: 30 },
+  roundBtn: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 3
+    backgroundColor: "#FACC15",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  counterText: { 
-    fontSize: 22, 
-    fontWeight: 'bold' 
-  },
-  summaryCard: {
-    backgroundColor: '#333',
-    padding: 20,
+  roundBtnText: { fontSize: 28, fontWeight: "bold", color: "#333" },
+  costPanel: {
+    backgroundColor: "#333",
     borderRadius: 15,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 30
+    padding: 25,
+    alignItems: "center",
   },
-  summaryLabel: { 
-    color: '#bbb', 
-    fontSize: 14 
+  costLabel: { color: "#999", fontSize: 16 },
+  costValue: {
+    color: "#FFF",
+    fontSize: 22,
+    fontWeight: "bold",
+    marginVertical: 5,
   },
-  price: { 
-    color: '#fff', 
-    fontSize: 32, 
-    fontWeight: 'bold', 
-    marginVertical: 5 
+  balanceLabel: { color: "#FFF", fontSize: 14 },
+  yellowText: { color: "#FACC15", fontWeight: "bold" },
+  mainBtn: {
+    backgroundColor: "#FEDA05",
+    width: "100%",
+    height: 70,
+    borderRadius: 15,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    flexDirection: "column",
+    gap: 8,
+    marginTop: 5,
   },
-  balanceInfo: { 
-    color: '#FEDA05', 
-    fontSize: 12 
-  },
-  mainButton: {
-    backgroundColor: '#FEDA05',
-    padding: 18,
-    borderRadius: 12,
-    alignItems: 'center'
-  },
-  mainButtonText: { 
-    color: '#000000', 
-    fontSize: 14, 
-    textAlign: 'justify',
-    fontWeight: 'bold' 
-  }
+  mainBtnText: { color: "#000000", fontWeight: "bold", fontSize: 14 },
+  successText:{ color: "green"},
+  infoText: {color: "black"}
 });

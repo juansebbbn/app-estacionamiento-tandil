@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,70 +7,86 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context"; 
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
+import { vehicleService } from "../api/Api_calls";
 
-interface Car {
-  id: string;
-  patent: string;
-  type: "Auto" | "Moto";
-}
-
-export const MyCarsScreen = () => {
+export const Cars_screen = () => {
   const insets = useSafeAreaInsets();
   const [patent, setPatent] = useState("");
-  const [selectedType, setSelectedType] = useState<"Auto" | "Moto">("Auto");
-  const [myCars, setMyCars] = useState<Car[]>([]);
+  const [selectedType, setSelectedType] = useState<"A" | "M">("A");
+  const [myVehicles, setVehicles] = useState([]);
+  const [deletePatent, setDeletePatent] = useState("");
 
-  const addCar = () => {
-    if (!patent) return;
-    const newCar: Car = {
-      id: Math.random().toString(),
-      patent: patent.toUpperCase(),
-      type: selectedType,
-    };
-    setMyCars([...myCars, newCar]);
-    setPatent("");
+  useEffect(() => {
+    fetchVehiclesData();
+  }, []);
+
+  const fetchVehiclesData = async () => {
+    try {
+      const data = await vehicleService.getAllVehicles();
+      setVehicles(data || []);
+    } catch (error) {
+      console.error("Error al obtener vehículos:", error);
+    }
   };
 
+  const addVehicle = async () => {
+    if (!patent.trim()) return;
+    try {
+      const vehicle = { patent: patent, type: selectedType };
+      console.log(vehicle.patent, vehicle.type);
+      await vehicleService.addVehicle(vehicle);
+      setPatent("");
+      fetchVehiclesData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const deleteVehicle = async () => {
+    try {
+      await vehicleService.deleteVehicle(deletePatent);
+      fetchVehiclesData();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const renderVehicleItem = ({ item }: any) => (
+    <View style={styles.carItem}>
+      <FontAwesome5
+        name={item.type === "A" ? "car" : "motorcycle"}
+        size={20}
+        color="black"
+      />
+      <Text style={styles.carText}>{item.patent}</Text>
+      <TouchableOpacity
+        onPress={() => {
+          setDeletePatent(item.patent);
+          deleteVehicle();
+        }}
+      >
+        <MaterialIcons name="delete" size={24} color="red" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom }, // Aplicamos márgenes dinámicos
-      ]}
-    >
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.content}>
         <Text style={styles.headerTitle}>Mis autos:</Text>
-
         <View style={styles.listContainer}>
-          {myCars.length > 0 ? (
-            <FlatList
-              data={myCars}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => (
-                <View style={styles.carItem}>
-                  <FontAwesome5
-                    name={item.type === "Auto" ? "car" : "motorcycle"}
-                    size={20}
-                    color="black"
-                  />
-                  <Text style={styles.carText}>{item.patent}</Text>
-                  <TouchableOpacity
-                    onPress={() =>
-                      setMyCars(myCars.filter((c) => c.id !== item.id))
-                    }
-                  >
-                    <MaterialIcons name="delete" size={20} color="red" />
-                  </TouchableOpacity>
-                </View>
-              )}
-            />
-          ) : (
-            <Text style={styles.emptyText}>
-              No tenés autos agregados todavía.
-            </Text>
-          )}
+          <FlatList
+            data={myVehicles}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={renderVehicleItem}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                No tenés autos agregados todavía.
+              </Text>
+            }
+          />
         </View>
 
         <Text style={styles.sectionTitle}>Agregá un auto:</Text>
@@ -78,29 +94,29 @@ export const MyCarsScreen = () => {
         <TextInput
           style={styles.input}
           placeholder="Patente"
-          autoCapitalize="characters"
+          placeholderTextColor="#888"
           value={patent}
           onChangeText={setPatent}
+          autoCapitalize="characters"
         />
 
         <View style={styles.selectorContainer}>
-
           <TouchableOpacity
             style={[
               styles.typeButton,
-              selectedType === "Auto" && styles.typeButtonSelected,
+              selectedType === "A" && styles.typeButtonSelected,
             ]}
-            onPress={() => setSelectedType("Auto")}
+            onPress={() => setSelectedType("A")}
           >
             <FontAwesome5
               name="car"
               size={20}
-              color={selectedType === "Auto" ? "white" : "black"}
+              color={selectedType === "A" ? "white" : "black"}
             />
             <Text
               style={[
                 styles.typeText,
-                selectedType === "Auto" && styles.typeTextSelected,
+                selectedType === "A" && styles.typeTextSelected,
               ]}
             >
               Auto
@@ -110,19 +126,19 @@ export const MyCarsScreen = () => {
           <TouchableOpacity
             style={[
               styles.typeButton,
-              selectedType === "Moto" && styles.typeButtonSelected,
+              selectedType === "M" && styles.typeButtonSelected,
             ]}
-            onPress={() => setSelectedType("Moto")}
+            onPress={() => setSelectedType("M")}
           >
             <FontAwesome5
               name="motorcycle"
               size={20}
-              color={selectedType === "Moto" ? "white" : "black"}
+              color={selectedType === "M" ? "white" : "black"}
             />
             <Text
               style={[
                 styles.typeText,
-                selectedType === "Moto" && styles.typeTextSelected,
+                selectedType === "M" && styles.typeTextSelected,
               ]}
             >
               Moto
@@ -130,7 +146,7 @@ export const MyCarsScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.addButton} onPress={addCar}>
+        <TouchableOpacity style={styles.addButton} onPress={addVehicle}>
           <Text style={styles.addButtonText}>Agregar</Text>
         </TouchableOpacity>
       </View>
@@ -139,25 +155,33 @@ export const MyCarsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  typeText: {
-    fontWeight: "bold",
-    fontSize: 14,
-    color: "black", 
-  },
-  typeTextSelected: {
-    color: "white",
-    fontWeight: "bold",
-  },
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  title: {
+    fontSize: 22,
+    fontWeight: "500",
+    marginLeft: 20,
   },
   content: {
     flex: 1,
     paddingHorizontal: 30,
     paddingTop: 20,
   },
-  headerTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
   listContainer: {
     height: 250,
     backgroundColor: "#ffffff",
@@ -165,23 +189,35 @@ const styles = StyleSheet.create({
     padding: 15,
     marginBottom: 30,
     borderWidth: 1,
-    borderColor: "#898989",
+    borderColor: "#ccc",
+    justifyContent: "center",
   },
   carItem: {
     flexDirection: "row",
-    backgroundColor: "white",
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: "#f9f9f9",
+    padding: 12,
+    borderRadius: 8,
     marginBottom: 10,
     alignItems: "center",
   },
-  carText: { fontWeight: "bold", flex: 1, marginLeft: 10 },
+  carText: {
+    fontWeight: "bold",
+    flex: 1,
+    marginLeft: 15,
+  },
   input: {
     backgroundColor: "#E0E0E0",
     padding: 12,
     borderRadius: 5,
     textAlign: "center",
     marginBottom: 20,
+    fontSize: 16,
+  },
+  sectionTitle: {
+    textAlign: "center",
+    marginBottom: 15,
+    fontSize: 16,
+    fontWeight: "500",
   },
   selectorContainer: {
     flexDirection: "row",
@@ -198,14 +234,31 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
   },
-  typeButtonSelected: { backgroundColor: "#0055b3" },
+  typeButtonSelected: {
+    backgroundColor: "#0055b3",
+  },
+  typeText: {
+    fontWeight: "bold",
+    fontSize: 14,
+    color: "black",
+  },
+  typeTextSelected: {
+    color: "white",
+  },
   addButton: {
     backgroundColor: "#FEDA05",
     padding: 15,
     borderRadius: 5,
     alignItems: "center",
   },
-  addButtonText: { fontWeight: "bold" },
-  emptyText: { textAlign: "center", marginTop: 100, color: "#888" },
-  sectionTitle: { textAlign: "center", marginBottom: 15 },
+  addButtonText: {
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#888",
+    fontSize: 16,
+    lineHeight: 22,
+  },
 });

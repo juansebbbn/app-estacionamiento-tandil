@@ -3,6 +3,8 @@ package com.juan.app_estacionamiento_tandil.controllers;
 import com.juan.app_estacionamiento_tandil.entities.User;
 import com.juan.app_estacionamiento_tandil.services.UserService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 
@@ -16,9 +18,10 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping("/getuid/{id}")
-    public ResponseEntity<User> getUser(@PathVariable Long id) {
-        return userService.getUserById(id);
+    @GetMapping("/getuser")
+    public ResponseEntity<User> getUser(@AuthenticationPrincipal UserDetails currentUser) {
+        String username = currentUser.getUsername();
+        return userService.getUserByUsername(username);
     }
 
     @GetMapping("/balance/{id}")
