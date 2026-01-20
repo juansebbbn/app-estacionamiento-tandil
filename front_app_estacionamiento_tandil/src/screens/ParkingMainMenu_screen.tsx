@@ -43,7 +43,7 @@ export const ParkingMenu = ({ navigation }: any) => {
           style={styles.card}
           onPress={() => navigation.navigate("Cuenta")}
         >
-          <MaterialIcons name="person" size={42} color="black" />{" "}
+          <MaterialIcons name="person" size={42} color="black" />
           <Text style={styles.cardTitle}>Cuenta</Text>
         </TouchableOpacity>
       </View>

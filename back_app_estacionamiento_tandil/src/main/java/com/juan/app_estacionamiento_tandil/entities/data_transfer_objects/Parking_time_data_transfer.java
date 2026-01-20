@@ -1,5 +1,6 @@
 package com.juan.app_estacionamiento_tandil.entities.data_transfer_objects;
 
+import com.juan.app_estacionamiento_tandil.entities.Vehicle;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,4 +15,5 @@ public class Parking_time_data_transfer {
     private LocalDateTime startTime;
     private LocalDateTime endTime;
     private Coordinate coordinate;
+    private String patent;
 }

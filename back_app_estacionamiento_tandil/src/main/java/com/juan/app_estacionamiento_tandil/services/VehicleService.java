@@ -1,8 +1,10 @@
 package com.juan.app_estacionamiento_tandil.services;
 
+import com.juan.app_estacionamiento_tandil.entities.ParkingTime;
 import com.juan.app_estacionamiento_tandil.entities.User;
 import com.juan.app_estacionamiento_tandil.entities.Vehicle;
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Vehicle_data_transfer;
+import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
 import org.springframework.http.HttpStatus;
@@ -101,8 +103,16 @@ public class VehicleService {
 
             Optional<Vehicle> vehicleDb = vehicleRepository.findByPatent(patent);
 
+
             if (vehicleDb.isPresent() && exists) {
                 Vehicle vehicle = vehicleDb.get();
+
+                for (ParkingTime pk : vehicle.getParkingTimes()) {
+                    if(pk.getState().equals(ParkingState.ACTIVE)){
+                        //can not delete this vehicle because has an active session
+                        return new ResponseEntity<>(HttpStatus.CONFLICT);
+                    }
+                }
 
                 vehicle.getUsers().remove(user);
                 user.getVehicles().remove(vehicle);

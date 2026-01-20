@@ -48,6 +48,12 @@ public class ParkingController {
         return parkingService.hasActiveSession(patent);
     }
 
+    @GetMapping("/hasSession")
+    public ResponseEntity<Parking_time_data_transfer> userActiveSession(@AuthenticationPrincipal UserDetails currentUser) {
+        String username = currentUser.getUsername();
+        return parkingService.userActiveSession(username);
+    }
+
     @GetMapping("/getAllSessions")
     public ResponseEntity<List<ParkingTime>> getAllSessions() {
         return ResponseEntity.ok(parkingService.getAllSessiones());

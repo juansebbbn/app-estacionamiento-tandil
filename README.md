@@ -1,133 +1,77 @@
-# app-estacionamiento-tandil
-purpose of the app:
+APP-ESTACIONAMIENTO-TANDIL // PARKING-TANDIL-APP:
 
-this app is designed to simplify and improve the way people access to paid parking and other features related. its a non production app, its only for improving programming skills.
-it starts with the CRUD of vehicles and user. a user can have many vehicles and also a vehicle could be related with many users. when an user is at parking zone he can start the session and the app begin to count the minutes he is parked. when the session is out the app discounts the amount related to that time. users can add credit to their accounts via mercado pago. 
-those are the basics features, next im gonna give detail of all features the app have.
+Purpose of the App:
+This application is designed to simplify and improve access to paid parking zones and related features. It is a non-production project developed specifically for the purpose of improving programming skills.
+The system manages the lifecycle of a parking session: from the initial CRUD of users and vehicles to the real-time tracking of parking duration. When a user is in a designated parking zone, they can start a session, and the app tracks the elapsed time. Upon termination, the system calculates and deducts the corresponding amount from the user's balance.
+Technical Stack
 
-actual features:
-1. crud for cars and users.
-2. can create an active session for not being sanctioned.
-3. can end this session and pay the corresponding amount.
-4. can look for balance of user.
-5. users with role inspector are allow to check if a car has an active session. if he is not, sanction corresponds.
-6. auth with jwt and spring security.
-7. geolocalization. the user can ask to the app if the zone where he is corresponds to a paid one
-8. ocupation map. map that shows all sessions actives. //the client or front using get all session endpoint is allowed to create a map
-9. automatic end. an smart feature that reads the change in the gps and finish the session. //this must be implemented at frontend, with client data (movement) we call close session endpoint.
+Technologies:
+Backend: Java Spring Boot, Spring Security, JWT
+Frontend: React Native
+Database/State: JPA/Hibernate, Context API
 
-features that will be added:
-1. notification system. alert the user if he is near to infraction (because of the amount limit) and others notifaction.
-   probably when he or she overpassed some time with a session active. // not finish the implementation
-2. global expection handler for not use java excep.
+Features,
+Current Implementation:
+- Identity Management: Full CRUD for cars and users. A many-to-many relationship exists between users and vehicles.
+- Session Management: Users can create an active session to authorize their parking.
+- Automated Billing: Users can end a session, triggered manually or via frontend logic, which calculates and processes the payment.
+- Balance Inquiry: Real-time checking of available user credit.
+- Enforcement (Inspector Role): Users with the Inspector role can verify if a specific vehicle has an active session. If not, a sanction is applied.
+- Security: Authentication and authorization managed via JWT and Spring Security.
+- Geofencing: Uses GPS data to determine if the user's current coordinates correspond to a paid parking zone.
+- Occupation Map: A visualization of all active parking sessions based on backend endpoints.
+- Smart Termination: A frontend feature that monitors GPS movement to automatically suggest or trigger the end of a session.
 
-technologies: 
-backend: java spring boot.
-frontend: react native.
+Future Features:
+- Notification System: Alerts for users nearing an infraction (e.g., low balance) or exceeding a specific time limit.
+- Global Exception Handling: Implementation of a centralized handler to manage application errors without exposing internal Java exceptions.
 
-BACKEND OR SERVER PART:
+API Endpoints
 
-endpoints:
+Authentication
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/refreshtoken
 
-auth:
-POST /api/auth/login //working
-POST /api/auth/register //working
-POST /api/auth/refreshtoken //working
+User Management
+GET /api/users
+GET /api/users/balance
 
-user:
-GET    /api/users/{id} // working
-GET    /api/users/balance/{id}  //working
+Vehicle Management
+POST /api/users/{userId}/vehicles
+GET /api/users/{userId}/vehicles
+DELETE /api/vehicles/{vehicleId}
 
-vehicle:
-POST   /api/users/{userId}/vehicles  //working
-GET    /api/users/{userId}/vehicles  //working
-DELETE /api/vehicles/{vehicleId} //working
+Parking Operations
+POST /api/parking/start/{patent}
+POST /api/parking/finish/{patent}
+GET /api/parking/active/{patent} (Inspector access only)
+GET /api/parking/hasActiveSession
 
-parking session:
-POST   /api/parking/start/{patent} //working
-POST   /api/parking/finish/{patent} //working
+Zones and Infrastructure
+POST /api/parkingzone/is_at_pz
+GET /api/lines/get
 
-GET    /api/parking/active/{patent}  //working. this endpoint could only be access by inspectors.
+Frontend Architecture (React Native),
+The project follows a modular architecture within the /src directory:
 
-parking zone:
-POST /api/parkingzone/is_at_pz //working, its for check if the user is at parking zone or not. 
+api/: Axios configurations and HTTP request services.
+components/: Reusable UI atoms and molecules.
+screens/: High-level view containers.
+navigation/: Routing logic (AuthStack and MainStack).
+context/: Global state management for sessions and JWT.
+hooks/: Custom hooks for GPS tracking and authentication.
+constants/: Static values like city boundaries and API URLs.
+utils/: Helper functions for formatting and validation.
+types/: TypeScript interfaces for data consistency.
 
+Key Learnings and Best Practices:
+Data Transfer Objects (DTOs): Using DTOs when passing data across system boundaries to avoid exposing database entities for security and abstraction.
+Identity Security: Avoiding the use of IDs provided by the client to identify users. Relying on verified tokens ensures users cannot manipulate data to affect other accounts.
+Session Logic Refactoring: Shifting from ID-based identification to username-based identification within the secure context to prevent unauthorized payment requests.
+Dynamic Business Rules: Avoiding hardcoded rates on the client side. Fetching rates from the backend ensures that price updates are immediate and do not require app store redeployments.
+Data Modeling: Prioritizing a robust initial data model to prevent complex refactoring during later stages of development.
 
-// this features will be added in future.
-payment:
-POST   /api/payments 
-GET    /api/users/{userId}/payments
-
-lines:
-GET /api/lines/get //working
-
-TEST USER WITH NO ROLE:
-username: user
-psw: 123
-
-TEST USER WITH INSPECTOR ROLE:
-username: INSPECTOR
-psw: 123
-
-FRONT OR CLIENT PART:
-
-Project Structure:
-The project follows a modular architecture to ensure scalability and maintainability. Below is a description of the /src directory:
-
-api/: Contains Axios configurations, base URL definitions, and all HTTP request services to communicate with the Spring Boot backend.
-
-components/: Reusable UI atoms and molecules (e.g., CustomButton, InputFields, ParkingCard) that are used across multiple screens.
-
-screens/: High-level containers for each application view (e.g., LoginScreen, MapScreen, ProfileScreen).
-
-navigation/: Logic for app routing, including AuthStack (login/register) and MainStack (protected routes requiring a JWT).
-
-context/: Global state management (React Context API) to store the User's session, JWT token, and authentication status.
-
-hooks/: Custom React hooks for reusable logic, such as useLocation for GPS tracking or useAuth for session management.
-
-constants/: Global static values like the Tandil city boundary coordinates, color palettes, and API endpoints.
-
-utils/: Helper functions for non-business logic, such as date formatting, currency conversion (ARS), or input validation.
-
-types/: TypeScript interfaces and types to ensure data consistency between the backend JSON responses and the frontend.
-
-api calls by frontend screens:
-
-start parking:
-   -getallvehicles
-   -is_at_parking_zone
-   -getbalance
-   -getfee
-   -startsession
-   -finishsession
-   -deletevehicle
-   -getuserbyusername
-
-map:
-   -is_at_parking_zone
-
-my cars:
-   -getallvehicles
-   -deletevehicle
-   -addvehicle
-
-account:
-   -getuserbyusername
-
-<------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------>
-
-things im learning in the process:
-1) use dtos when we are passing system limit front -> back. do not expose the entity for safety. we dont want user knows what things we save at db.
-2) do not use id from client to identify users. users can adulterate data and our system will make decisions that affects others users.
-3) id had to refactor the way a session was created and ended, in past i asked to client for his id to recognise him and make the payment. but with this data flow 
-i was expose to a client that send me an id from other person. 
-4) hardcoding (client side) the parking rate is risky because it forces users to update their mobile application every time prices change. If a user doesn't update, they will see an outdated price while your Spring Boot backend charges the new one, leading to confusion and complaints. Additionally, app store approvals for updates can be slow, preventing you from making immediate price adjustments. Instead, you should fetch these business rules from an API endpoint during the app's startup or when a session begins. This ensures everyone sees consistent, real-time data without needing constant deployments. You can still hardcode permanent values like time measurement units or internal configuration keys, but any value tied to money or changing business logic belongs in the database.
-5) make a good data model in the beginning, if not, in future you will have a lot of problems, by refactor.
-
-thing that i have to remember:
-1) make the payment logic. when a user pays the parking session i must create an object paymente and add it to user history paymente. thanks to this user could visualize payment data.
-2) change the way i identify the user. do not user id, instead user username. // finished
-3) when user upload a car it can not be use it by other user because the post duplicates the key. //finished
-
-
+Development Roadmap:
+Payment Persistence: Implement logic to create a Payment object and history record whenever a session is finalized.
+Inhibiting Vehicle Deletion: Prevent users from deleting a vehicle from their profile if that specific vehicle currently has an active, unpaid parking session.

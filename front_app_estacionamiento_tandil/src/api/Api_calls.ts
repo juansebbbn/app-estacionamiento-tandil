@@ -24,6 +24,11 @@ export const parkingService = {
     console.log("Finalizando estacionamiento para:", sessionId);
     return response.data;
   },
+
+  hasSessionActive: async()=>{
+    const response = await Api_client.get(`api/parking/hasSession`)
+    return response.data;
+  }
 };
 
 export const vehicleService = {

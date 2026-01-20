@@ -9,8 +9,10 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { MaterialIcons, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { userService } from "../api/Api_calls";
+import { useAuth } from '../context/AuthContext'
 
 export const AccountScreen = ({ navigation }: any) => {
+  const { signOut } = useAuth();
   const insets = useSafeAreaInsets();
   const [userData, setUserData] = useState<any>(null);
 
@@ -26,6 +28,10 @@ export const AccountScreen = ({ navigation }: any) => {
       console.error(error);
     }
   };
+
+  function logout() {
+    throw new Error("Function not implemented.");
+  }
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -83,7 +89,9 @@ export const AccountScreen = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.logoutButton}
-          onPress={() => navigation.replace("Welcome")}
+          onPress={() => {
+            signOut();
+          }}
         >
           <MaterialIcons name="logout" size={20} color="#e74c3c" />
           <Text style={styles.logoutText}>Cerrar Sesión</Text>

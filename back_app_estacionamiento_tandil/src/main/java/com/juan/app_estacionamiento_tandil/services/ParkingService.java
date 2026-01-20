@@ -60,7 +60,7 @@ public class ParkingService {
 
                 parkingRespository.save(pk);
 
-                Parking_time_data_transfer ptdt = new Parking_time_data_transfer(pk.getId(), pk.getStartTime(), pk.getEndTime(), pk.getCoordinate());
+                Parking_time_data_transfer ptdt = new Parking_time_data_transfer(pk.getId(), pk.getStartTime(), pk.getEndTime(), pk.getCoordinate(), pk.getVehicle().getPatent());
 
                 return ResponseEntity.status(HttpStatus.CREATED).body(ptdt);
             }
@@ -112,5 +112,23 @@ public class ParkingService {
 
     public List<ParkingTime> getAllSessiones() {
         return parkingRespository.findAll();
+    }
+
+    public ResponseEntity<Parking_time_data_transfer> userActiveSession(String username) {
+        Optional<User> userdb = userRepository.findByUsername(username);
+
+        if(userdb.isPresent()) {
+            User user = userdb.get();
+            for (Vehicle vehicle : user.getVehicles()) {
+                for (ParkingTime parkingTime : vehicle.getParkingTimes()) {
+                    if(parkingTime.getUser().getUsername().equals(username) && parkingTime.getState() == ACTIVE) {
+                        Parking_time_data_transfer pk = new Parking_time_data_transfer(parkingTime.getId(), LocalDateTime.now(), null, parkingTime.getCoordinate(), parkingTime.getVehicle().getPatent());
+                        return ResponseEntity.status(HttpStatus.CREATED).body(pk);
+                    }
+                }
+            }
+        }
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 }
