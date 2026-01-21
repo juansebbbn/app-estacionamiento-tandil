@@ -27,10 +27,7 @@ public class ParkingController {
     public ResponseEntity<Parking_time_data_transfer> startParkingSession(@PathVariable String patent,
                                                                           @RequestBody Coordinate coordinate,
                                                                           @AuthenticationPrincipal UserDetails currentUser) {
-
-
         String username = currentUser.getUsername();
-        System.out.println("controller startParkingSession for username: " + username);
         return parkingService.startParkingSession(patent, username, coordinate);
     }
 
@@ -56,7 +53,7 @@ public class ParkingController {
 
     @GetMapping("/getAllSessions")
     public ResponseEntity<List<ParkingTime>> getAllSessions() {
-        return ResponseEntity.ok(parkingService.getAllSessiones());
+        return ResponseEntity.ok(parkingService.getAllSessions());
     }
 
 }

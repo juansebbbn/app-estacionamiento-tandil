@@ -39,12 +39,7 @@ public class VehicleController {
 
     @DeleteMapping("/delete/{patent}")
     public ResponseEntity<Void> deleteVehicle(@PathVariable String patent, @AuthenticationPrincipal UserDetails currentUser) {
-        if (patent == null) {
-            System.out.println("Didnt proportionate a vehicle id");
-        }
-
         String username = currentUser.getUsername();
-
         return vehicleService.deleteVehicle(patent, username);
     }
 }

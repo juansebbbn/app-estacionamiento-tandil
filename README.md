@@ -21,10 +21,10 @@ Current Implementation:
 - Geofencing: Uses GPS data to determine if the user's current coordinates correspond to a paid parking zone.
 - Occupation Map: A visualization of all active parking sessions based on backend endpoints.
 - Smart Termination: A frontend feature that monitors GPS movement to automatically suggest or trigger the end of a session.
+- Global Exception Handling: Implementation of a centralized handler to manage application errors without exposing internal Java exceptions.
 
 Future Features:
 - Notification System: Alerts for users nearing an infraction (e.g., low balance) or exceeding a specific time limit.
-- Global Exception Handling: Implementation of a centralized handler to manage application errors without exposing internal Java exceptions.
 
 API Endpoints
 

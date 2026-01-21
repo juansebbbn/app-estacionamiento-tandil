@@ -2,6 +2,8 @@ package com.juan.app_estacionamiento_tandil.services;
 
 import com.juan.app_estacionamiento_tandil.entities.Line;
 import com.juan.app_estacionamiento_tandil.repositories.LineRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -11,33 +13,34 @@ import java.util.Optional;
 @Service
 public class LineService {
     private final LineRepository lineRepository;
+    private static final Logger logger = LoggerFactory.getLogger(LineService.class);
 
     public LineService(LineRepository lineRepository) {
         this.lineRepository = lineRepository;
     }
 
     public ResponseEntity<List<Line>> getAllLines() {
-        System.out.println("Fetching all lines");
+        logger.info("Getting all lines");
         return ResponseEntity.ok(lineRepository.findAll());
     }
 
     public ResponseEntity<Line> getLineById(Long id) {
-        System.out.println("Fetching line by id: " + id);
+        logger.info("Getting line with id {}", id);
         Optional<Line> line = lineRepository.findById(id);
         if (line.isPresent()) {
             return ResponseEntity.ok(line.get());
         }
-        System.out.println("Could not find line by id: " + id);
+        logger.info("No line found with id while fetching{}", id);
         return ResponseEntity.notFound().build();
     }
 
     public ResponseEntity<Line> createLine(Line line) {
-        System.out.println("Creating line: " + line);
+        logger.info("Creating line {}", line);
         return ResponseEntity.ok(lineRepository.save(line));
     }
 
     public ResponseEntity<Line> updateLine(Long id, Line updatedLine) {
-        System.out.println("Updating line: " + updatedLine);
+        logger.info("Updating line with id {}", id);
         Optional<Line> line = lineRepository.findById(id);
         if (line.isPresent()) {
             Line db_line = line.get();
@@ -48,14 +51,14 @@ public class LineService {
             lineRepository.save(db_line);
             return ResponseEntity.ok(lineRepository.save(line.get()));
         }
-        System.out.println("Could not find line by id: " + id);
+        logger.info("No line found with id while updating{}", id);
         return ResponseEntity.notFound().build();
     }
 
     public ResponseEntity<Void> deleteLine(Long id) {
-        System.out.println("Deleting line: " + id);
+        logger.info("Deleting line with id {}", id);
         lineRepository.deleteById(id);
-        System.out.println("Deleted line: " + id);
+        logger.info("Line with id {} deleted", id);
         return ResponseEntity.noContent().build();
     }
 }

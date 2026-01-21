@@ -24,8 +24,4 @@ public class UserController {
         return userService.getUserByUsername(username);
     }
 
-    @GetMapping("/balance/{id}")
-    public ResponseEntity<BigDecimal> getBalance(@PathVariable Long id) {
-        return userService.getBalance(id);
-    }
 }
