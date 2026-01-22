@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import Api_client from '../api/Api_client'; // Asegúrate de que la ruta sea correcta
+import Api_client from '../api/Api_client'; 
 
 interface LoginData {
   username: string;
@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(JSON.parse(username));
         }
       } catch (e) {
-        console.error("Error recuperando datos persistentes", e);
+        console.error("Error recovering stored data", e);
       } finally {
         setLoading(false);
       }
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(username); 
     } catch (error) {
-      console.error("Error en signIn:", error);
+      console.error("Error while signing user:", error);
       throw error;
     }
   };
@@ -82,7 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setUser(username);
     } catch (error) {
-      console.error("Error en signUp:", error);
+      console.error("Error while signing up user:", error);
       throw error;
     }
   };
@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth debe ser usado dentro de un AuthProvider');
+    throw new Error('useAuth must be used inside authprovider');
   }
   return context;
 };

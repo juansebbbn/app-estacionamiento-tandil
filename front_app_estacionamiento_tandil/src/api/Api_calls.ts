@@ -15,13 +15,11 @@ export const parkingService = {
       longitude: coordinates.longitude,
     });
 
-    console.log("Iniciando estacionamiento para:", patent);
     return response.data;
   },
 
   finishSession: async (sessionId: number) => {
     const response = await Api_client.post(`api/parking/finish/${sessionId}`);
-    console.log("Finalizando estacionamiento para:", sessionId);
     return response.data;
   },
 

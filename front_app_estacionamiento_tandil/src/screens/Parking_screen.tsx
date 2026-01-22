@@ -44,11 +44,9 @@ export const ParkingScreen = ({ navigation }: any) => {
         setPatent(data.patent);
         setParkingSession(true);
         setActivePatent(data.patent);
-        console.log(data.parkingId);
-        console.log("asd" + activeSession);
       }
     } catch (error) {
-      console.log("Sin sesión activa previa");
+      console.log("HasSessionActive: ", error);
     }
   };
 
@@ -275,7 +273,7 @@ export const ParkingScreen = ({ navigation }: any) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FDFBF7", padding: 25 },
+  container: { flex: 1, backgroundColor: "#fbf9f0" , padding: 25 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   mainTitle: {
     fontSize: 20,

@@ -57,7 +57,7 @@ export const RegisterScreen = ({ navigation }: any) => {
         "Error de registro",
         "No se pudo completar el registro. Es posible que el DNI o el usuario ya estén en uso."
       );
-      console.error("Error en registro:", error);
+      console.error("Register error: ", error);
     } finally {
       setIsSubmitting(false);
     }

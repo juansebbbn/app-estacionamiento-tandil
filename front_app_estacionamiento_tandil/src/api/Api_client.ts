@@ -31,7 +31,7 @@ Api_client.interceptors.response.use(
   },
   async (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn("Sesión expirada o token inválido detectado por el interceptor");
+      console.warn("Session expired or token invalidad detected by interceptor");
       await SecureStore.deleteItemAsync('userToken');
       await SecureStore.deleteItemAsync('userData');
     }

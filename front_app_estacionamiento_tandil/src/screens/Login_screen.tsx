@@ -26,7 +26,7 @@ export const LoginScreen = ({ navigation }: any) => {
         "Error de acceso", 
         "Usuario o contraseña incorrectos. Verificá tus datos e intentá nuevamente."
       );
-      console.error("Error en login:", error);
+      console.error("Error signing user:", error);
     } finally {
       setIsSubmitting(false);
     }

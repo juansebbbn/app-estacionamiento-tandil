@@ -17,7 +17,7 @@ export const ParkingMenu = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigation.navigate("Estacionamiento")}
+          onPress={() => navigation.navigate("Parking")}
         >
           <MaterialCommunityIcons name="car-clock" size={32} color="black" />
           <Text style={styles.cardTitle}>Iniciar Estacionamiento</Text>
@@ -25,7 +25,7 @@ export const ParkingMenu = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigation.navigate("Mapa")}
+          onPress={() => navigation.navigate("Map")}
         >
           <MaterialIcons name="map" size={32} color="black" />
           <Text style={styles.cardTitle}>Ver mapa</Text>
@@ -33,7 +33,7 @@ export const ParkingMenu = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigation.navigate("Autos")}
+          onPress={() => navigation.navigate("Vehicles")}
         >
           <FontAwesome5 name="car-side" size={28} color="black" />
           <Text style={styles.cardTitle}>Mis Autos</Text>
@@ -41,7 +41,7 @@ export const ParkingMenu = ({ navigation }: any) => {
 
         <TouchableOpacity
           style={styles.card}
-          onPress={() => navigation.navigate("Cuenta")}
+          onPress={() => navigation.navigate("Account")}
         >
           <MaterialIcons name="person" size={42} color="black" />
           <Text style={styles.cardTitle}>Cuenta</Text>

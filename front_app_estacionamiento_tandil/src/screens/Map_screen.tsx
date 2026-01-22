@@ -33,7 +33,7 @@ export const MapZoneScreen = () => {
       let location = await Location.getCurrentPositionAsync({});
       setUserLocation(location.coords);
     } catch (error) {
-      console.log("Error obteniendo ubicación:", error);
+      console.log("Error fetching user location:", error);
     }
   };
 
@@ -57,7 +57,7 @@ export const MapZoneScreen = () => {
       setZone(data); 
       setShowModal(true);
     } catch (error) {
-      console.error("Error al consultar zona:", error);
+      console.error("Error while fetching zone:", error);
     } finally {
       setLoading(false);
     }

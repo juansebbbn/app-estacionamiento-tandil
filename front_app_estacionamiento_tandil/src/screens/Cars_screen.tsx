@@ -27,7 +27,7 @@ export const Cars_screen = () => {
       const data = await vehicleService.getAllVehicles();
       setVehicles(data || []);
     } catch (error) {
-      console.error("Error al obtener vehículos:", error);
+      console.error("Error fetching cars data:", error);
     }
   };
 
@@ -35,7 +35,6 @@ export const Cars_screen = () => {
     if (!patent.trim()) return;
     try {
       const vehicle = { patent: patent, type: selectedType };
-      console.log(vehicle.patent, vehicle.type);
       await vehicleService.addVehicle(vehicle);
       setPatent("");
       fetchVehiclesData();

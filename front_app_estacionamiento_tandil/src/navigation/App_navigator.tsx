@@ -41,27 +41,27 @@ export const App_navigator = () => {
             options={{ title: "Menú Principal" }}
           />
           <Stack.Screen
-            name="Autos"
+            name="Vehicles"
             component={Cars_screen}
             options={{ title: "Mis Vehículos" }}
           />
           <Stack.Screen
-            name="Estacionamiento"
+            name="Parking"
             component={ParkingScreen}
             options={{ title: "Estacionar" }}
           />
           <Stack.Screen
-            name="Cuenta"
+            name="Account"
             component={AccountScreen}
             options={{ title: "Mi Cuenta" }}
           />
           <Stack.Screen
-            name="Pagos"
+            name="Payments"
             component={PaymentHistoryScreen}
             options={{ title: "Historial de Pagos" }}
           />
           <Stack.Screen
-            name="Mapa"
+            name="Map"
             component={MapZoneScreen}
             options={{ title: "Zonas de Estacionamiento" }}
           />

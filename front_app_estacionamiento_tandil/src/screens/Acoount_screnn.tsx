@@ -29,10 +29,6 @@ export const AccountScreen = ({ navigation }: any) => {
     }
   };
 
-  function logout() {
-    throw new Error("Function not implemented.");
-  }
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -60,7 +56,7 @@ export const AccountScreen = ({ navigation }: any) => {
 
           <TouchableOpacity
             style={styles.optionItem}
-            onPress={() => navigation.navigate("Autos")}
+            onPress={() => navigation.navigate("Vehicles")}
           >
             <FontAwesome5 name="car" size={18} color="#333" />
             <Text style={styles.optionText}>Mis Vehículos Registrados</Text>
@@ -69,7 +65,7 @@ export const AccountScreen = ({ navigation }: any) => {
 
           <TouchableOpacity
             style={styles.optionItem}
-            onPress={() => navigation.navigate("Pagos")}
+            onPress={() => navigation.navigate("Payments")}
           >
             <MaterialIcons name="history" size={20} color="#333" />
             <Text style={styles.optionText}>Historial de Pagos</Text>
