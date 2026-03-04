@@ -1,7 +1,7 @@
 APP-ESTACIONAMIENTO-TANDIL // PARKING-TANDIL-APP:
 
 Purpose of the App:
-This application is designed to simplify and improve access to paid parking zones and related features. It is a non-production project developed specifically for the purpose of improving programming skills.
+This application is designed to simplify and improve access to paid parking zones and related features.
 The system manages the lifecycle of a parking session: from the initial CRUD of users and vehicles to the real-time tracking of parking duration. When a user is in a designated parking zone, they can start a session, and the app tracks the elapsed time. Upon termination, the system calculates and deducts the corresponding amount from the user's balance.
 Technical Stack
 
