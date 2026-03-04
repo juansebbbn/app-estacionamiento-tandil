@@ -20,45 +20,61 @@ public class LineService {
     }
 
     public ResponseEntity<List<Line>> getAllLines() {
-        logger.info("Getting all lines");
-        return ResponseEntity.ok(lineRepository.findAll());
+        logger.info("[LINE] [getAllLines] START");
+        
+        List<Line> lines = lineRepository.findAll();
+        
+        logger.info("[LINE] [getAllLines] SUCCESS - line_count={}", lines.size());
+        return ResponseEntity.ok(lines);
     }
 
     public ResponseEntity<Line> getLineById(Long id) {
-        logger.info("Getting line with id {}", id);
+        logger.info("[LINE] [getLineById] START - id={}", id);
+        
         Optional<Line> line = lineRepository.findById(id);
         if (line.isPresent()) {
+            logger.info("[LINE] [getLineById] SUCCESS - id={}", id);
             return ResponseEntity.ok(line.get());
         }
-        logger.info("No line found with id while fetching{}", id);
+        
+        logger.warn("[LINE] [getLineById] NOT_FOUND - id={}", id);
         return ResponseEntity.notFound().build();
     }
 
     public ResponseEntity<Line> createLine(Line line) {
-        logger.info("Creating line {}", line);
-        return ResponseEntity.ok(lineRepository.save(line));
+        logger.info("[LINE] [createLine] START - name={}, number={}", line.getName(), line.getNumber());
+        
+        Line savedLine = lineRepository.save(line);
+        
+        logger.info("[LINE] [createLine] SUCCESS - id={}, name={}", savedLine.getId(), savedLine.getName());
+        return ResponseEntity.ok(savedLine);
     }
 
     public ResponseEntity<Line> updateLine(Long id, Line updatedLine) {
-        logger.info("Updating line with id {}", id);
+        logger.info("[LINE] [updateLine] START - id={}, new_name={}, new_number={}", id, updatedLine.getName(), updatedLine.getNumber());
+        
         Optional<Line> line = lineRepository.findById(id);
         if (line.isPresent()) {
             Line db_line = line.get();
             db_line.setName(updatedLine.getName());
             db_line.setColor(updatedLine.getColor());
             db_line.setNumber(updatedLine.getNumber());
-            db_line.setName(updatedLine.getName());
-            lineRepository.save(db_line);
-            return ResponseEntity.ok(lineRepository.save(line.get()));
+            
+            Line savedLine = lineRepository.save(db_line);
+            logger.info("[LINE] [updateLine] SUCCESS - id={}, name={}", id, savedLine.getName());
+            return ResponseEntity.ok(savedLine);
         }
-        logger.info("No line found with id while updating{}", id);
+        
+        logger.warn("[LINE] [updateLine] NOT_FOUND - id={}", id);
         return ResponseEntity.notFound().build();
     }
 
     public ResponseEntity<Void> deleteLine(Long id) {
-        logger.info("Deleting line with id {}", id);
+        logger.info("[LINE] [deleteLine] START - id={}", id);
+        
         lineRepository.deleteById(id);
-        logger.info("Line with id {} deleted", id);
+        
+        logger.info("[LINE] [deleteLine] SUCCESS - id={}", id);
         return ResponseEntity.noContent().build();
     }
 }

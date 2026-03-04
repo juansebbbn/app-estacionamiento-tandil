@@ -11,9 +11,11 @@ public class ParkingZoneService {
     private static final Logger logger = LoggerFactory.getLogger(ParkingZoneService.class);
 
     public boolean isAtParkingZone(Coordinate coord) {
-        logger.info("Starting method isAtParkingZone()");
-        logger.info("ParkingZone coordinate is {}", coord);
-        logger.info("Finishing method isAtParkingZone()");
-        return ParkingZone.isUserInParkingZone(coord.getLatitude(), coord.getLongitude());
+        logger.info("[ZONE] [isAtParkingZone] START - lat={}, lng={}", coord.getLatitude(), coord.getLongitude());
+        
+        boolean result = ParkingZone.isUserInParkingZone(coord.getLatitude(), coord.getLongitude());
+        
+        logger.info("[ZONE] [isAtParkingZone] SUCCESS - lat={}, lng={}, in_zone={}", coord.getLatitude(), coord.getLongitude(), result);
+        return result;
     }
 }

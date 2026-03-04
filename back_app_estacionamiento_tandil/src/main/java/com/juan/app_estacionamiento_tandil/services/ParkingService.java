@@ -6,6 +6,8 @@ import com.juan.app_estacionamiento_tandil.entities.Vehicle;
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Coordinate;
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Parking_time_data_transfer;
 import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
+import com.juan.app_estacionamiento_tandil.exceptions.ParkingSessionException;
+import com.juan.app_estacionamiento_tandil.exceptions.ResourceNotFoundException;
 import com.juan.app_estacionamiento_tandil.repositories.ParkingRespository;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
@@ -40,132 +42,145 @@ public class ParkingService {
     }
 
     public ResponseEntity<Parking_time_data_transfer> startParkingSession(String patent, String username, Coordinate coordinate) {
-        logger.info("Starting startParkingSession()");
+        logger.info("[PARKING] [startParkingSession] START - patent={}, username={}", patent, username);
 
         Optional<User> userdb = userRepository.findByUsername(username);
 
-        logger.info("Fetching user at StartParkingSession() {}", username);
+        logger.info("[PARKING] [startParkingSession] FETCH_USER - username={}", username);
 
-        if (userdb.isPresent()) {
-            User user = userdb.get();
-
-            Optional<Vehicle> vehdb = vehicleRepository.findByPatent(patent);
-
-            if(vehdb.isPresent()) {
-                Vehicle vehicle = vehdb.get();
-
-                ParkingTime pk = new ParkingTime(vehicle, LocalDateTime.now(), null, ParkingState.ACTIVE, coordinate, user);
-
-                parkingRespository.save(pk);
-
-                logger.info("Parking session started");
-
-                Parking_time_data_transfer ptdt = new Parking_time_data_transfer(pk.getId(), pk.getStartTime(), pk.getEndTime(), pk.getCoordinate(), pk.getVehicle().getPatent());
-
-                logger.info("Method finished StartParkingSession() ");
-
-                return ResponseEntity.status(HttpStatus.CREATED).body(ptdt);
-            }
+        if (userdb.isEmpty()) {
+            logger.error("[PARKING] [startParkingSession] USER_NOT_FOUND - username={}", username);
+            throw new ResourceNotFoundException("User not found: " + username);
         }
 
-        logger.info("Could not create parking session, no user or vehicle found");
-        logger.info("Method finished StartParkingSession() ");
+        User user = userdb.get();
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        Optional<Vehicle> vehdb = vehicleRepository.findByPatent(patent);
+
+        logger.info("[PARKING] [startParkingSession] FETCH_VEHICLE - patent={}", patent);
+
+        if(vehdb.isEmpty()) {
+            logger.error("[PARKING] [startParkingSession] VEHICLE_NOT_FOUND - patent={}", patent);
+            throw new ResourceNotFoundException("Vehicle not found: " + patent);
+        }
+
+        Vehicle vehicle = vehdb.get();
+
+        ParkingTime pk = new ParkingTime(vehicle, LocalDateTime.now(), null, ParkingState.ACTIVE, coordinate, user);
+
+        parkingRespository.save(pk);
+
+        logger.info("[PARKING] [startParkingSession] SUCCESS - patent={}, username={}, parking_id={}", patent, username, pk.getId());
+
+        Parking_time_data_transfer ptdt = new Parking_time_data_transfer(pk.getId(), pk.getStartTime(), pk.getEndTime(), pk.getCoordinate(), pk.getVehicle().getPatent());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(ptdt);
     }
 
     public ResponseEntity<String> finishParkingSession(Long parkingId, String username) {
-        logger.info("Starting finishParkingSession()");
+        logger.info("[PARKING] [finishParkingSession] START - parking_id={}, username={}", parkingId, username);
 
         Optional<ParkingTime> ptdb = parkingRespository.findById(parkingId);
 
-        logger.info("Fetching parking time at finishParkingSession(), parking id: {}", parkingId);
+        logger.info("[PARKING] [finishParkingSession] FETCH_PARKING - parking_id={}", parkingId);
 
-        if(ptdb.isPresent()) {
-            ParkingTime pk = ptdb.get();
-
-            Optional<User> userdb = userRepository.findByUsername(username);
-
-            logger.info("Fetching user at finishParkingSession() {}", username);
-
-            if(userdb.isPresent()) {
-                User user = userdb.get();
-
-                pk.setState(FINISHED);
-
-                pk.setEndTime(LocalDateTime.now());
-
-                Duration duration = Duration.between(pk.getStartTime(), pk.getEndTime());
-
-                Long minutes = duration.toMinutes();
-
-                Long FEE = 100L;
-                long totalCharge = minutes * FEE;
-
-                BigDecimal newBalance = user.getBalance().subtract(BigDecimal.valueOf(totalCharge));
-
-                user.setBalance(newBalance);
-
-                logger.info("State changed to FINISHED and updated user balance");
-
-                userRepository.save(user);
-                parkingRespository.save(pk);
-
-                logger.info("Parking session finished");
-                logger.info("Method finished finishParkingSession() ");
-
-                return ResponseEntity.status(HttpStatus.CREATED).body("Parking session finished");
-            }
+        if(ptdb.isEmpty()) {
+            logger.error("[PARKING] [finishParkingSession] PARKING_NOT_FOUND - parking_id={}", parkingId);
+            throw new ResourceNotFoundException("Parking session not found: " + parkingId);
         }
 
-        logger.info("Could not finish parking session, no user or vehicle found");
-        logger.info("Method finished finishParkingSession() ");
-
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Could not finish parking session");
-    }
-
-    public List<ParkingTime> getAllSessions() {
-        logger.info("Starting getAllSessions()");
-        logger.info("Fetching parking time at getAllSessions()");
-        logger.info("Method finished GetAllSessions()");
-        return parkingRespository.findAll();
-    }
-
-    public ResponseEntity<Parking_time_data_transfer> userActiveSession(String username) {
-        logger.info("Starting UserActiveSession()");
+        ParkingTime pk = ptdb.get();
 
         Optional<User> userdb = userRepository.findByUsername(username);
 
-        logger.info("Fetching user at userActiveSession() {}", username);
+        logger.info("[PARKING] [finishParkingSession] FETCH_USER - username={}", username);
 
-        if(userdb.isPresent()) {
-            User user = userdb.get();
+        if(userdb.isEmpty()) {
+            logger.error("[PARKING] [finishParkingSession] USER_NOT_FOUND - username={}", username);
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
 
-            logger.info("Looking if user has any active session at userActiveSession() {}", username);
+        User user = userdb.get();
 
-            for (Vehicle vehicle : user.getVehicles()) {
-                for (ParkingTime parkingTime : vehicle.getParkingTimes()) {
-                    if(parkingTime.getUser().getUsername().equals(username) && parkingTime.getState() == ACTIVE) {
-                        Parking_time_data_transfer pk = new Parking_time_data_transfer(parkingTime.getId(), LocalDateTime.now(), null, parkingTime.getCoordinate(), parkingTime.getVehicle().getPatent());
-                        logger.info("User has an active session at userActiveSession() {}, active session id: ", parkingTime.getId() );
-                        return ResponseEntity.status(HttpStatus.CREATED).body(pk);
-                    }
+        pk.setState(FINISHED);
+        pk.setEndTime(LocalDateTime.now());
+
+        Duration duration = Duration.between(pk.getStartTime(), pk.getEndTime());
+        Long minutes = duration.toMinutes();
+        Long FEE = 100L;
+        long totalCharge = minutes * FEE;
+
+        BigDecimal newBalance = user.getBalance().subtract(BigDecimal.valueOf(totalCharge));
+
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            logger.error("[PARKING] [finishParkingSession] INSUFFICIENT_BALANCE - username={}, required={}, available={}", 
+                username, totalCharge, user.getBalance());
+            throw new ParkingSessionException("Insufficient balance to complete parking session");
+        }
+
+        user.setBalance(newBalance);
+
+        logger.info("[PARKING] [finishParkingSession] CALCULATE_FEE - minutes={}, total_charge={}", minutes, totalCharge);
+
+        userRepository.save(user);
+        parkingRespository.save(pk);
+
+        logger.info("[PARKING] [finishParkingSession] SUCCESS - parking_id={}, username={}, final_balance={}", 
+            parkingId, username, newBalance);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body("Parking session finished");
+    }
+
+    public List<ParkingTime> getAllSessions() {
+        logger.info("[PARKING] [getAllSessions] START");
+        
+        List<ParkingTime> sessions = parkingRespository.findAll();
+        
+        logger.info("[PARKING] [getAllSessions] SUCCESS - session_count={}", sessions.size());
+        return sessions;
+    }
+
+    public ResponseEntity<Parking_time_data_transfer> userActiveSession(String username) {
+        logger.info("[PARKING] [userActiveSession] START - username={}", username);
+
+        Optional<User> userdb = userRepository.findByUsername(username);
+
+        logger.info("[PARKING] [userActiveSession] FETCH_USER - username={}", username);
+
+        if(userdb.isEmpty()) {
+            logger.error("[PARKING] [userActiveSession] USER_NOT_FOUND - username={}", username);
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
+        User user = userdb.get();
+
+        logger.info("[PARKING] [userActiveSession] SEARCH_ACTIVE - username={}", username);
+
+        for (Vehicle vehicle : user.getVehicles()) {
+            for (ParkingTime parkingTime : vehicle.getParkingTimes()) {
+                if(parkingTime.getUser().getUsername().equals(username) && parkingTime.getState() == ACTIVE) {
+                    Parking_time_data_transfer pk = new Parking_time_data_transfer(parkingTime.getId(), LocalDateTime.now(), null, parkingTime.getCoordinate(), parkingTime.getVehicle().getPatent());
+                    logger.info("[PARKING] [userActiveSession] SUCCESS - username={}, active_session_id={}", username, parkingTime.getId());
+                    return ResponseEntity.status(HttpStatus.CREATED).body(pk);
                 }
             }
         }
 
-        logger.info("Could not find active parking session");
-        logger.info("Method finished userActiveSession() ");
+        logger.info("[PARKING] [userActiveSession] NO_ACTIVE_SESSION - username={}", username);
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
 
     public ResponseEntity<Boolean> hasActiveSession(String patent) {
-        logger.info("Starting hasActiveSession()");
-        logger.info("Fetching parking time at hasActiveSession() {}", patent);
+        logger.info("[PARKING] [hasActiveSession] START - patent={}", patent);
+        
         Optional<ParkingTime> pkdb = parkingRespository.findByPatent(patent);
-        logger.info("Method finished hasActiveSession()");
-        return pkdb.isPresent() ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
+        
+        boolean hasActive = pkdb.isPresent() && pkdb.get().getState() == ACTIVE;
+        
+        logger.info("[PARKING] [hasActiveSession] SUCCESS - patent={}, has_active={}", patent, hasActive);
+        
+        return hasActive ? ResponseEntity.ok(true) : ResponseEntity.status(HttpStatus.NOT_FOUND).body(false);
     }
 
 }

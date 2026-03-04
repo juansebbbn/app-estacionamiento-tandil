@@ -1,6 +1,7 @@
 package com.juan.app_estacionamiento_tandil.services;
 
 import com.juan.app_estacionamiento_tandil.entities.User;
+import com.juan.app_estacionamiento_tandil.exceptions.ResourceNotFoundException;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,14 +21,19 @@ public class UserService {
     }
 
     public ResponseEntity<User> getUserByUsername(String username) {
-        logger.info("Starting method getUserByUsername()");
+        logger.info("[USER] [getUserByUsername] START - username={}", username);
 
         Optional<User> user = userRepository.findByUsername(username);
 
-        logger.info("Fetching user by username: {}", username);
+        logger.info("[USER] [getUserByUsername] FETCH_USER - username={}", username);
 
-        logger.info("Method finished");
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        if (user.isEmpty()) {
+            logger.error("[USER] [getUserByUsername] USER_NOT_FOUND - username={}", username);
+            throw new ResourceNotFoundException("User not found: " + username);
+        }
+
+        logger.info("[USER] [getUserByUsername] SUCCESS - username={}", username);
+        return ResponseEntity.ok(user.get());
     }
 
 }

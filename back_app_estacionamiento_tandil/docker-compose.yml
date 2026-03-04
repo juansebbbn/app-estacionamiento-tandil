@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: estacionamiento_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: estacionamiento_tandil
+      MYSQL_USER: estacionamiento_user
+      MYSQL_PASSWORD: estacionamiento_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - estacionamiento_network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: estacionamiento_backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: estacionamiento_tandil
+      DB_USER: estacionamiento_user
+      DB_PASSWORD: estacionamiento_pass
+    depends_on:
+      - mysql
+    networks:
+      - estacionamiento_network
+
+volumes:
+  mysql_data:
+
+networks:
+  estacionamiento_network:
+    driver: bridge
