@@ -21,7 +21,7 @@ jobs:
         distribution: 'temurin'
         
     - name: Cache Maven dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2
         key: ${{ runner.os }}-m2-${{ hashFiles('back_app_estacionamiento_tandil/pom.xml') }}
@@ -44,7 +44,7 @@ jobs:
         reporter: java-junit
         
     - name: Upload backend build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: success()
       with:
         name: backend-artifact
