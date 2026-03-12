@@ -42,7 +42,7 @@ public class User implements UserDetails {
     private BigDecimal balance = BigDecimal.ZERO;
 
     @ManyToMany(mappedBy = "users")
-    @JsonIgnoreProperties("users") // Cuando cargues vehículos, NO cargues sus listas de usuarios
+    @JsonIgnoreProperties("users")
     private List<Vehicle> vehicles = new ArrayList<>();
 
     @OneToMany(mappedBy = "user")

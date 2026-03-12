@@ -50,5 +50,5 @@
             this.user = user;
         }
 
-        protected ParkingTime() {}
+        public ParkingTime() {}
     }
