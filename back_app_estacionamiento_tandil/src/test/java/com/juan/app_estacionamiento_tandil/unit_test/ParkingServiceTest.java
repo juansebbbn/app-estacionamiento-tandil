@@ -301,7 +301,7 @@ class ParkingServiceTest {
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
             parkingService.userActiveSession("nonexistent");
         });
-        
+
         verify(userRepository).findByUsername("nonexistent");
     }
 

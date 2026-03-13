@@ -6,6 +6,8 @@ import com.juan.app_estacionamiento_tandil.entities.Vehicle;
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Vehicle_data_transfer;
 import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
 import com.juan.app_estacionamiento_tandil.entities.enums.VehicleType;
+import com.juan.app_estacionamiento_tandil.exceptions.ResourceNotFoundException;
+import com.juan.app_estacionamiento_tandil.exceptions.VehicleOperationException;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
 import com.juan.app_estacionamiento_tandil.services.VehicleService;
@@ -154,21 +156,6 @@ class VehicleServiceTest {
     }
 
     @Test
-    void addVehicle_UserNotFound_ReturnsNotFound() {
-        // Given
-        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
-
-        // When
-        ResponseEntity<String> response = vehicleService.addVehicle(vehicleDTO, "nonexistent");
-
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Could not linked vehicle", response.getBody());
-        verify(userRepository).findByUsername("nonexistent");
-        verify(vehicleRepository, never()).save(any(Vehicle.class));
-    }
-
-    @Test
     void getVehicles_UserExists_ReturnsVehicleList() {
         // Given
         testUser.addVehicle(testVehicle);
@@ -198,72 +185,6 @@ class VehicleServiceTest {
         assertNotNull(response.getBody());
         assertTrue(response.getBody().isEmpty());
         verify(userRepository).findByUsername("testuser");
-    }
-
-    @Test
-    void getVehicles_UserNotFound_ReturnsNotFound() {
-        // Given
-        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
-
-        // When
-        ResponseEntity<List<Vehicle>> response = vehicleService.getVehicles("nonexistent");
-
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        verify(userRepository).findByUsername("nonexistent");
-    }
-
-    @Test
-    void deleteVehicle_UserNotFound_ReturnsConflict() {
-        // Given
-        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
-
-        // When
-        ResponseEntity<Void> response = vehicleService.deleteVehicle("ABC123", "nonexistent");
-
-        // Then
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        verify(userRepository).findByUsername("nonexistent");
-        verify(vehicleRepository, never()).findByPatent(anyString());
-    }
-
-    @Test
-    void deleteVehicle_VehicleNotLinkedToUser_ReturnsOk() {
-        // Given
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(vehicleRepository.findByPatent("ABC123")).thenReturn(Optional.of(testVehicle));
-
-        // When
-        ResponseEntity<Void> response = vehicleService.deleteVehicle("ABC123", "testuser");
-
-        // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(userRepository).findByUsername("testuser");
-        verify(vehicleRepository).findByPatent("ABC123");
-        verify(vehicleRepository, never()).save(any(Vehicle.class));
-        verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void deleteVehicle_VehicleHasActiveParkingSession_ReturnsConflict() {
-        // Given
-        testUser.addVehicle(testVehicle);
-        testVehicle.addUser(testUser);
-        testVehicle.getParkingTimes().add(activeParkingTime);
-        
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(vehicleRepository.findByPatent("ABC123")).thenReturn(Optional.of(testVehicle));
-
-        // When
-        ResponseEntity<Void> response = vehicleService.deleteVehicle("ABC123", "testuser");
-
-        // Then
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        verify(userRepository).findByUsername("testuser");
-        verify(vehicleRepository).findByPatent("ABC123");
-        verify(vehicleRepository, never()).save(any(Vehicle.class));
-        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -313,23 +234,6 @@ class VehicleServiceTest {
         verify(userRepository).save(testUser);
         assertFalse(testUser.getVehicles().contains(testVehicle));
         assertFalse(testVehicle.getUsers().contains(testUser));
-    }
-
-    @Test
-    void deleteVehicle_VehicleNotFound_ReturnsOk() {
-        // Given
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(vehicleRepository.findByPatent("ABC123")).thenReturn(Optional.empty());
-
-        // When
-        ResponseEntity<Void> response = vehicleService.deleteVehicle("ABC123", "testuser");
-
-        // Then
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(userRepository).findByUsername("testuser");
-        verify(vehicleRepository).findByPatent("ABC123");
-        verify(vehicleRepository, never()).save(any(Vehicle.class));
-        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -400,5 +304,99 @@ class VehicleServiceTest {
         assertTrue(testVehicle.getUsers().contains(testUser));
         assertTrue(testVehicle.getUsers().contains(user2));
         assertEquals(2, testVehicle.getUsers().size());
+    }
+
+    @Test
+    void deleteVehicle_VehicleNotFound_ThrowsException() {
+        // Given
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(vehicleRepository.findByPatent("ABC123")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            vehicleService.deleteVehicle("ABC123", "testuser");
+        });
+
+        verify(userRepository).findByUsername("testuser");
+        verify(vehicleRepository).findByPatent("ABC123");
+        verify(vehicleRepository, never()).save(any(Vehicle.class));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void deleteVehicle_VehicleNotLinkedToUser_ThrowsException() {
+        // Given
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(vehicleRepository.findByPatent("ABC123")).thenReturn(Optional.of(testVehicle));
+
+        assertThrows(VehicleOperationException.class, () -> {
+            vehicleService.deleteVehicle("ABC123", "testuser");
+        });
+
+        verify(userRepository).findByUsername("testuser");
+        verify(vehicleRepository).findByPatent("ABC123");
+        verify(vehicleRepository, never()).save(any(Vehicle.class));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void deleteVehicle_VehicleHasActiveParkingSession_ThrowsException() {
+        // Given
+        testUser.addVehicle(testVehicle);
+        testVehicle.addUser(testUser);
+        testVehicle.getParkingTimes().add(activeParkingTime);
+
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(vehicleRepository.findByPatent("ABC123")).thenReturn(Optional.of(testVehicle));
+
+        // When & Then
+        assertThrows(VehicleOperationException.class, () -> {
+            vehicleService.deleteVehicle("ABC123", "testuser");
+        });
+
+        verify(userRepository).findByUsername("testuser");
+        verify(vehicleRepository).findByPatent("ABC123");
+        verify(vehicleRepository, never()).save(any(Vehicle.class));
+    }
+
+    @Test
+    void getVehicles_UserNotFound_ThrowsException() {
+        // Given
+        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            vehicleService.getVehicles("nonexistent");
+        });
+
+        verify(userRepository).findByUsername("nonexistent");
+    }
+
+    @Test
+    void deleteVehicle_UserNotFound_ThrowsException() {
+        // Given
+        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            vehicleService.deleteVehicle("ABC123", "nonexistent");
+        });
+
+        verify(userRepository).findByUsername("nonexistent");
+        verify(vehicleRepository, never()).findByPatent(anyString());
+    }
+
+    @Test
+    void addVehicle_UserNotFound_ThrowsException() {
+        // Given
+        when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
+
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            vehicleService.addVehicle(vehicleDTO, "nonexistent");
+        });
+
+        verify(userRepository).findByUsername("nonexistent");
+        verify(vehicleRepository, never()).save(any(Vehicle.class));
     }
 }

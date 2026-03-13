@@ -1,6 +1,7 @@
 package com.juan.app_estacionamiento_tandil.unit_test;
 
 import com.juan.app_estacionamiento_tandil.entities.User;
+import com.juan.app_estacionamiento_tandil.exceptions.ResourceNotFoundException;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import com.juan.app_estacionamiento_tandil.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,63 +64,55 @@ class UserServiceTest {
     }
 
     @Test
-    void getUserByUsername_UserDoesNotExist_ReturnsNotFound() {
+    void getUserByUsername_UserDoesNotExist_ThrowsException() {
         // Given
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<User> response = userService.getUserByUsername("nonexistent");
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserByUsername("nonexistent");
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        
         verify(userRepository).findByUsername("nonexistent");
     }
 
     @Test
-    void getUserByUsername_NullUsername_ReturnsNotFound() {
+    void getUserByUsername_NullUsername_ThrowsException() {
         // Given
         when(userRepository.findByUsername(null)).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<User> response = userService.getUserByUsername(null);
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserByUsername(null);
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        
         verify(userRepository).findByUsername(null);
     }
 
     @Test
-    void getUserByUsername_EmptyUsername_ReturnsNotFound() {
+    void getUserByUsername_EmptyUsername_ThrowsException() {
         // Given
         when(userRepository.findByUsername("")).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<User> response = userService.getUserByUsername("");
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserByUsername("");
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        
         verify(userRepository).findByUsername("");
     }
 
     @Test
-    void getUserByUsername_UsernameWithSpecialCharacters_ReturnsNotFound() {
+    void getUserByUsername_UsernameWithSpecialCharacters_ThrowsException() {
         // Given
         String specialUsername = "user@domain.com";
         when(userRepository.findByUsername(specialUsername)).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<User> response = userService.getUserByUsername(specialUsername);
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            userService.getUserByUsername(specialUsername);
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        
         verify(userRepository).findByUsername(specialUsername);
     }
 
