@@ -19,33 +19,32 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        cache: maven
         
-    - name: Cache Maven dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('back_app_estacionamiento_tandil/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
+    - name: Make mvnw executable
+      run: chmod +x ./mvnw
+      working-directory: back_app_estacionamiento_tandil
         
     - name: Run backend tests
-      working-directory: ./back_app_estacionamiento_tandil
       run: ./mvnw test
+      working-directory: back_app_estacionamiento_tandil
       
-    - name: Build backend application
-      working-directory: ./back_app_estacionamiento_tandil
+    - name: Build application
       run: ./mvnw clean package -DskipTests=false
+      working-directory: back_app_estacionamiento_tandil
+      
+    - name: Generate test report
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Maven Tests
+        path: back_app_estacionamiento_tandil/target/surefire-reports/*.xml
+        reporter: java-junit
         
-    - name: Upload backend build artifacts
+    - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       if: success()
       with:
-        name: backend-artifact
+        name: app-artifact
         path: back_app_estacionamiento_tandil/target/*.jar
         retention-days: 30
-        
-    - name: Build Docker image
-      if: github.ref == 'refs/heads/main'
-      working-directory: ./back_app_estacionamiento_tandil
-      run: |
-        docker build -t app-estacionamiento-backend:${{ github.sha }} .
-        docker tag app-estacionamiento-backend:${{ github.sha }} app-estacionamiento-backend:latest
