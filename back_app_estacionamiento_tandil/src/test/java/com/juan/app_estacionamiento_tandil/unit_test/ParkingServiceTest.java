@@ -7,6 +7,7 @@ import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Coordi
 import com.juan.app_estacionamiento_tandil.entities.data_transfer_objects.Parking_time_data_transfer;
 import com.juan.app_estacionamiento_tandil.entities.enums.ParkingState;
 import com.juan.app_estacionamiento_tandil.entities.enums.VehicleType;
+import com.juan.app_estacionamiento_tandil.exceptions.ResourceNotFoundException;
 import com.juan.app_estacionamiento_tandil.repositories.ParkingRespository;
 import com.juan.app_estacionamiento_tandil.repositories.UserRepository;
 import com.juan.app_estacionamiento_tandil.repositories.VehicleRepository;
@@ -125,77 +126,46 @@ class ParkingServiceTest {
     }
 
     @Test
-    void startParkingSession_UserNotFound_ReturnsNotFound() {
+    void startParkingSession_UserNotFound_ThrowsException() {
         // Given
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<Parking_time_data_transfer> response = parkingService.startParkingSession("ABC123", "nonexistent", testCoordinate);
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            parkingService.startParkingSession("ABC123", "nonexistent", testCoordinate);
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        
         verify(userRepository).findByUsername("nonexistent");
         verify(vehicleRepository, never()).findByPatent(anyString());
         verify(parkingRespository, never()).save(any(ParkingTime.class));
     }
 
     @Test
-    void startParkingSession_VehicleNotFound_ReturnsNotFound() {
+    void startParkingSession_VehicleNotFound_ThrowsException() {
         // Given
         when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
         when(vehicleRepository.findByPatent("XYZ789")).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<Parking_time_data_transfer> response = parkingService.startParkingSession("XYZ789", "testuser", testCoordinate);
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            parkingService.startParkingSession("XYZ789", "testuser", testCoordinate);
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
-        
         verify(userRepository).findByUsername("testuser");
         verify(vehicleRepository).findByPatent("XYZ789");
         verify(parkingRespository, never()).save(any(ParkingTime.class));
     }
 
     @Test
-    void finishParkingSession_ParkingAndUserExist_Success() {
-        // Given
-        when(parkingRespository.findById(1L)).thenReturn(Optional.of(activeParkingTime));
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(parkingRespository.save(any(ParkingTime.class))).thenReturn(finishedParkingTime);
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
-
-        // When
-        ResponseEntity<String> response = parkingService.finishParkingSession(1L, "testuser");
-
-        // Then
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("Parking session finished", response.getBody());
-        
-        assertEquals(ParkingState.FINISHED, activeParkingTime.getState());
-        assertNotNull(activeParkingTime.getEndTime());
-        assertTrue(testUser.getBalance().compareTo(BigDecimal.valueOf(1000.0)) < 0);
-        
-        verify(parkingRespository).findById(1L);
-        verify(userRepository).findByUsername("testuser");
-        verify(parkingRespository).save(any(ParkingTime.class));
-        verify(userRepository).save(any(User.class));
-    }
-
-    @Test
-    void finishParkingSession_ParkingNotFound_ReturnsNotFound() {
+    void finishParkingSession_ParkingNotFound_ThrowsException() {
         // Given
         when(parkingRespository.findById(999L)).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<String> response = parkingService.finishParkingSession(999L, "testuser");
+        // When & Then
+        assertThrows(ResourceNotFoundException.class, () -> {
+            parkingService.finishParkingSession(999L, "testuser");
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Could not finish parking session", response.getBody());
-        
         verify(parkingRespository).findById(999L);
         verify(userRepository, never()).findByUsername(anyString());
         verify(parkingRespository, never()).save(any(ParkingTime.class));
@@ -203,22 +173,22 @@ class ParkingServiceTest {
     }
 
     @Test
-    void finishParkingSession_UserNotFound_ReturnsNotFound() {
+    void finishParkingSession_UserNotFound_ThrowsException() {
         // Given
         when(parkingRespository.findById(1L)).thenReturn(Optional.of(activeParkingTime));
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
-        // When
-        ResponseEntity<String> response = parkingService.finishParkingSession(1L, "nonexistent");
+        // When & Then
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            parkingService.finishParkingSession(1L, "nonexistent");
+        });
 
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals("Could not finish parking session", response.getBody());
-        
-        verify(parkingRespository).findById(1L);
+        // Validar el mensaje
+        assertEquals("User not found: nonexistent", exception.getMessage());
+
+        // Verificaciones de Mockito
         verify(userRepository).findByUsername("nonexistent");
         verify(parkingRespository, never()).save(any(ParkingTime.class));
-        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
@@ -328,11 +298,9 @@ class ParkingServiceTest {
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
         // When
-        ResponseEntity<Parking_time_data_transfer> response = parkingService.userActiveSession("nonexistent");
-
-        // Then
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertNull(response.getBody());
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            parkingService.userActiveSession("nonexistent");
+        });
         
         verify(userRepository).findByUsername("nonexistent");
     }

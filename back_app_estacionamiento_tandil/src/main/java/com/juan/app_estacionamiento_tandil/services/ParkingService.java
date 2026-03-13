@@ -112,12 +112,6 @@ public class ParkingService {
 
         BigDecimal newBalance = user.getBalance().subtract(BigDecimal.valueOf(totalCharge));
 
-        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
-            logger.error("[PARKING] [finishParkingSession] INSUFFICIENT_BALANCE - username={}, required={}, available={}", 
-                username, totalCharge, user.getBalance());
-            throw new ParkingSessionException("Insufficient balance to complete parking session");
-        }
-
         user.setBalance(newBalance);
 
         logger.info("[PARKING] [finishParkingSession] CALCULATE_FEE - minutes={}, total_charge={}", minutes, totalCharge);
